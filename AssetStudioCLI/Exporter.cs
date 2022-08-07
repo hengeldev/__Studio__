@@ -1,9 +1,7 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
 using System.Linq;
 using System.Text;
 using Newtonsoft.Json;
-using System.Collections.Generic;
 using AssetStudio;
 
 namespace AssetStudioCLI
@@ -284,12 +282,6 @@ namespace AssetStudioCLI
         {
             var fileName = FixFileName(item.Text);
             fullPath = Path.Combine(dir, fileName + extension);
-            if (!File.Exists(fullPath))
-            {
-                Directory.CreateDirectory(dir);
-                return true;
-            }
-            fullPath = Path.Combine(dir, fileName + item.UniqueID + extension);
             if (!File.Exists(fullPath))
             {
                 Directory.CreateDirectory(dir);
