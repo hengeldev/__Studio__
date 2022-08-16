@@ -1,6 +1,4 @@
 ﻿using AssetStudio;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -170,68 +168,73 @@ namespace AssetStudioGUI
                 {
                     var hoyoFile = new HoYoFile();
                     hoyoFile.LoadFile(reader);
-                    var fileList = hoyoFile.Bundles.SelectMany(x => x.Value).Where(x => !(x.path.Contains(".resS") || x.path.Contains(".resource"))).ToList();
-                    foreach (var cab in fileList)
+                    foreach (var bundle in hoyoFile.Bundles)
                     {
-                        using (var cabReader = new FileReader(cab.stream))
+                        foreach (var cab in bundle.Value)
                         {
-                            var assetsFile = new SerializedFile(cabReader, null);
-                            var objects = assetsFile.m_Objects.Where(x => x.HasExportableType()).ToArray();
-                            IndexObject indexObject = null;
-                            foreach (var obj in objects)
+                            using (var cabReader = new FileReader(cab.stream))
                             {
-                                var objectReader = new ObjectReader(assetsFile.reader, assetsFile, obj);
-                                objectReader.Reset();
-                                var asset = new AssetEntry()
+                                if (cabReader.FileType == FileType.AssetsFile)
                                 {
-                                    SourcePath = reader.FullPath,
-                                    PathID = objectReader.m_PathID,
-                                    Type = objectReader.type
-                                };
-                                var exportable = true;
-                                switch (objectReader.type)
-                                {
-                                    case ClassIDType.GameObject:
-                                        var gameObject = new GameObject(objectReader);
-                                        if (!NameLUT.ContainsKey(objectReader.m_PathID))
+                                    var assetsFile = new SerializedFile(cabReader, null);
+                                    var objects = assetsFile.m_Objects.Where(x => x.HasExportableType()).ToArray();
+                                    IndexObject indexObject = null;
+                                    foreach (var obj in objects)
+                                    {
+                                        var objectReader = new ObjectReader(assetsFile.reader, assetsFile, obj);
+                                        objectReader.Reset();
+                                        var asset = new AssetEntry()
                                         {
-                                            NameLUT.Add(objectReader.m_PathID, gameObject.m_Name);
-                                        }
-                                        exportable = false;
-                                        break;
-                                    case ClassIDType.Shader:
-                                        asset.Name = objectReader.ReadAlignedString();
-                                        if (string.IsNullOrEmpty(asset.Name))
+                                            SourcePath = reader.FullPath,
+                                            PathID = objectReader.m_PathID,
+                                            Type = objectReader.type
+                                        };
+                                        var exportable = true;
+                                        switch (objectReader.type)
                                         {
-                                            var m_parsedForm = new SerializedShader(objectReader);
-                                            asset.Name = m_parsedForm.m_Name;
+                                            case ClassIDType.GameObject:
+                                                var gameObject = new GameObject(objectReader);
+                                                if (!NameLUT.ContainsKey(objectReader.m_PathID))
+                                                {
+                                                    NameLUT.Add(objectReader.m_PathID, gameObject.m_Name);
+                                                }
+                                                exportable = false;
+                                                break;
+                                            case ClassIDType.Shader:
+                                                asset.Name = objectReader.ReadAlignedString();
+                                                if (string.IsNullOrEmpty(asset.Name))
+                                                {
+                                                    var m_parsedForm = new SerializedShader(objectReader);
+                                                    asset.Name = m_parsedForm.m_Name;
+                                                }
+                                                break;
+                                            case ClassIDType.Animator:
+                                                var gameObjectPPtr = new PPtr<GameObject>(objectReader);
+                                                PPtrLUT.Add((assets.Count, gameObjectPPtr.m_PathID));
+                                                asset.Name = "AnimatorPlaceholder";
+                                                break;
+                                            case ClassIDType.MiHoYoBinData:
+                                                if (indexObject.Names.TryGetValue(objectReader.m_PathID, out var binName))
+                                                {
+                                                    var path = ResourceIndex.GetContainerFromBinName(reader.FileName, binName);
+                                                    asset.Name = !string.IsNullOrEmpty(path) ? Path.GetFileName(path) : binName;
+                                                }
+                                                exportable = IndexObject.Exportable;
+                                                break;
+                                            case ClassIDType.IndexObject:
+                                                indexObject = new IndexObject(objectReader);
+                                                asset.Name = "IndexObject";
+                                                exportable = IndexObject.Exportable;
+                                                break;
+                                            default:
+                                                asset.Name = objectReader.ReadAlignedString();
+                                                break;
                                         }
-                                        break;
-                                    case ClassIDType.Animator:
-                                        var gameObjectPPtr = new PPtr<GameObject>(objectReader);
-                                        PPtrLUT.Add((assets.Count, gameObjectPPtr.m_PathID));
-                                        asset.Name = "AnimatorPlaceholder";
-                                        break;
-                                    case ClassIDType.MiHoYoBinData:
-                                        if (indexObject.Names.TryGetValue(objectReader.m_PathID, out var binName))
+                                        if (exportable)
                                         {
-                                            var path = ResourceIndex.GetContainerFromBinName(reader.FileName, binName);
-                                            asset.Name = !string.IsNullOrEmpty(path) ? Path.GetFileName(path) : binName;
+                                            assets.Add(asset);
                                         }
-                                        exportable = IndexObject.Exportable;
-                                        break;
-                                    case ClassIDType.IndexObject:
-                                        indexObject = new IndexObject(objectReader);
-                                        asset.Name = "IndexObject";
-                                        exportable = IndexObject.Exportable;
-                                        break;
-                                    default:
-                                        asset.Name = objectReader.ReadAlignedString();
-                                        break;
-                                }
-                                if (exportable)
-                                {
-                                    assets.Add(asset);
+                                    }
                                 }
                             }
                         }
@@ -381,7 +384,8 @@ namespace AssetStudioGUI
                                 if (indexObject.Names.TryGetValue(m_MiHoYoBinData.m_PathID, out var binName))
                                 {
                                     string path = "";
-                                    if (Path.GetExtension(assetsFile.originalPath) == ".blk")
+                                    var game = GameManager.GetGame("GI");
+                                    if (Path.GetExtension(assetsFile.originalPath) == game.Extension)
                                     {
                                         path = ResourceIndex.GetContainerFromBinName(assetsFile.originalPath, binName);
                                     }

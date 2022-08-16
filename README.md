@@ -39,8 +39,8 @@ How to use:
 
 CLI Version:
 ```
-AssetStudioGUI 0.16.60
-Copyright c Perfare 2018-2022
+AssetStudioCLI 0.16.60
+Copyright (C) 2022 AssetStudioCLI
 
   -v, --verbose           Show log messages.
 
@@ -48,9 +48,17 @@ Copyright c Perfare 2018-2022
 
   -f, --filter            Specify regex filter(s).
 
-  -g, --game              Specify Game.
+  -g, --game              Required. Specify Game.
 
   -m, --map               Build CABMap/AssetMap.
+
+  -o, --override          Export assets even if name already exist.
+
+  -a, --noassetbundle     Exclude AssetBundle from AssetMap/Export
+
+  -i, --noindexobject     Exclude IndexObject/MiHoYoBinData from AssetMap/Export
+
+  -k, --xorkey            XOR key to decrypt MiHoYoBinData
 
   --help                  Display this help screen.
 

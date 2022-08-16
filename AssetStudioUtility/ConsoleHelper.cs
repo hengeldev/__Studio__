@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 
-namespace AssetStudioGUI
+namespace AssetStudio
 {
     public static class ConsoleHelper
     {
