@@ -63,10 +63,10 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: net5.0-windows
-          path: AssetStudioCLI/bin/Release/net5.0-windows/publish
+          path: AssetStudioGUI/bin/Release/net5.0-windows/publish
 
       - name: Upload .Net6 Artifact
         uses: actions/upload-artifact@v2
         with:
           name: net6.0-windows
-          path: AssetStudioCLI/bin/Release/net6.0-windows/publish
+          path: AssetStudioGUI/bin/Release/net6.0-windows/publish
