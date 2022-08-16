@@ -1,19 +1,22 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Collections.Generic;
 using System.Text.RegularExpressions;
+using System.Threading;
+using System.Xml.Linq;
 using AssetStudio;
 using CommandLine;
+using static AssetStudioGUI.Studio;
 
-namespace AssetStudioCLI 
+namespace AssetStudioGUI
 {
-    public class Program
+    public static class CLI
     {
-        public static AssetsManager AssetsManager = new AssetsManager() { ResolveDependancies = false };
-        public static List<AssetItem> exportableAssets = new List<AssetItem>();
-        public static void Main(string[] args)
+        public static void CreateCLI(string[] args)
         {
+            ConsoleHelper.AllocConsole();
+            ConsoleHelper.SetConsoleTitle("AssetStudio");
             var parser = new Parser(config =>
             {
                 config.AutoHelp = true;
@@ -22,44 +25,74 @@ namespace AssetStudioCLI
                 config.HelpWriter = Console.Out;
             });
             parser.ParseArguments<Options>(args)
-                   .WithParsed(o =>
-                   {
-                       try
-                       {
-                           if (o.Verbose)
-                               Logger.Default = new ConsoleLogger();
+            .WithParsed(o =>
+            {
+                try
+                {
+                    var game = GameManager.GetGame(o.GameName);
 
-                           var inputPath = o.Input;
-                           var outputPath = o.Output;
-                           var types = o.Type.ToArray();
-                           var filtes = o.Filter.ToArray();
+                    if (game == null)
+                    {
+                        Console.WriteLine("Invalid Game !!");
+                        Console.WriteLine(GameManager.SupportedGames());
+                        return;
+                    }
 
-                           var files = Directory.Exists(inputPath) ? Directory.GetFiles(inputPath, "*.blk", SearchOption.AllDirectories) : new string[] { inputPath };
-                           foreach (var file in files)
-                           {
-                               AssetsManager.LoadFiles(file);
-                               BuildAssetData(types, filtes);
-                               ExportAssets(outputPath, exportableAssets);
-                               exportableAssets.Clear();
-                               AssetsManager.Clear();
-                           }
-                       }
-                       catch (Exception e)
-                       {
-                           Console.WriteLine(e.Message);
-                           Console.WriteLine(e.StackTrace);
-                       }
-                   });
-            
+                    assetsManager.ResolveDependancies = false;
+                    assetsManager.Game = game;
+                    Studio.Game = game;
+                    Exporter.RetryIfExist = false;
+
+                    if (o.Verbose)
+                        Logger.Default = new ConsoleLogger();
+
+                    var inputPath = o.Input;
+                    var outputPath = o.Output;
+                    var types = o.Type.ToArray();
+                    var filtes = o.Filter.ToArray();
+
+                    var files = Directory.Exists(inputPath) ? Directory.GetFiles(inputPath, $"*{game.Extension}", SearchOption.AllDirectories) : new string[] { inputPath };
+
+                    if (o.Map)
+                    {
+                        CABManager.BuildMap(files.ToList(), game);
+                        var assets = BuildAssetMap(files.ToList());
+                        ExportAssetsMap(outputPath, assets, ExportListType.XML);
+                        exportableAssets.Clear();
+                        assetsManager.Clear();
+                    }
+                    else
+                    {
+                        foreach (var file in files)
+                        {
+                            assetsManager.LoadFiles(file);
+                            BuildAssetData(types, filtes);
+                            ExportAssets(outputPath, exportableAssets);
+                            exportableAssets.Clear();
+                            assetsManager.Clear();
+                        }
+                    }
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e.Message);
+                    Console.WriteLine(e.StackTrace);
+                }
+            })
+            .WithNotParsed(o =>
+            {
+                Console.WriteLine("Press any key to continue...");
+                Console.ReadKey();
+            });
         }
         public static void BuildAssetData(ClassIDType[] formats, Regex[] filters)
         {
             string productName = null;
-            var objectCount = AssetsManager.assetsFileList.Sum(x => x.Objects.Count);
+            var objectCount = assetsManager.assetsFileList.Sum(x => x.Objects.Count);
             var objectAssetItemDic = new Dictionary<AssetStudio.Object, AssetItem>(objectCount);
             var containers = new List<(PPtr<AssetStudio.Object>, string)>();
             int i = 0;
-            foreach (var assetsFile in AssetsManager.assetsFileList)
+            foreach (var assetsFile in assetsManager.assetsFileList)
             {
                 foreach (var asset in assetsFile.Objects)
                 {
@@ -201,17 +234,17 @@ namespace AssetStudioCLI
             }
             containers.Clear();
         }
+
         public static void ExportAssets(string savePath, List<AssetItem> toExportAssets)
         {
             int toExportCount = toExportAssets.Count;
             int exportedCount = 0;
-            int i = 0;
             foreach (var asset in toExportAssets)
             {
                 string exportPath;
                 exportPath = Path.Combine(savePath, asset.TypeString);
                 exportPath += Path.DirectorySeparatorChar;
-                Logger.Info($"[{exportedCount+1}/{toExportCount}] Exporting {asset.TypeString}: {asset.Text}");
+                Logger.Info($"[{exportedCount + 1}/{toExportCount}] Exporting {asset.TypeString}: {asset.Text}");
                 try
                 {
                     if (Exporter.ExportConvertFile(asset, exportPath))
@@ -234,6 +267,43 @@ namespace AssetStudioCLI
 
             Logger.Info(statusText);
         }
+
+        public static void ExportAssetsMap(string savePath, List<AssetEntry> toExportAssets, ExportListType exportListType)
+        {
+            string filename;
+            switch (exportListType)
+            {
+                case ExportListType.XML:
+                    filename = Path.Combine(savePath, "assets_map.xml");
+                    var doc = new XDocument(
+                        new XElement("Assets",
+                            new XAttribute("filename", filename),
+                            new XAttribute("createdAt", DateTime.UtcNow.ToString("s")),
+                            toExportAssets.Select(
+                                asset => new XElement("Asset",
+                                    new XElement("Name", asset.Name),
+                                    new XElement("Type", new XAttribute("id", (int)asset.Type), asset.Type.ToString()),
+                                    new XElement("PathID", asset.PathID),
+                                    new XElement("Source", asset.SourcePath)
+                                )
+                            )
+                        )
+                    );
+                    doc.Save(filename);
+                    break;
+            }
+
+            var statusText = $"Finished exporting asset list with {toExportAssets.Count()} items.";
+
+            StatusStripUpdate(statusText);
+
+            Logger.Info($"AssetMap build successfully !!");
+
+            if (Properties.Settings.Default.openAfterExport && toExportAssets.Count() > 0)
+            {
+                OpenFolderInExplorer(savePath);
+            }
+        }
     }
 
     public class Options
@@ -244,6 +314,10 @@ namespace AssetStudioCLI
         public IEnumerable<ClassIDType> Type { get; set; }
         [Option('f', "filter", HelpText = "Specify regex filter(s).")]
         public IEnumerable<Regex> Filter { get; set; }
+        [Option('g', "game", HelpText = "Specify Game.")]
+        public string GameName { get; set; }
+        [Option('m', "map", HelpText = "Build CABMap/AssetMap.")]
+        public bool Map { get; set; }
         [Value(0, Required = true, MetaName = "input_path", HelpText = "Input file/folder.")]
         public string Input { get; set; }
         [Value(1, Required = true, MetaName = "output_path", HelpText = "Output folder.")]

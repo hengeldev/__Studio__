@@ -28,7 +28,8 @@ namespace AssetStudio
         Lzma,
         Lz4,
         Lz4HC,
-        Lzham
+        Lzham,
+        Lz4Mr0k
     }
     public class BundleFile
     {
@@ -63,15 +64,43 @@ namespace AssetStudio
         private StorageBlock[] m_BlocksInfo;
         private Node[] m_DirectoryInfo;
 
-        public StreamFile[] fileList;
+        public StreamFile[] FileList;
 
         public BundleFile(FileReader reader)
         {
             m_Header = new Header();
             m_Header.signature = reader.ReadStringToNull();
-            m_Header.version = reader.ReadUInt32();
-            m_Header.unityVersion = reader.ReadStringToNull();
-            m_Header.unityRevision = reader.ReadStringToNull();
+            
+            if (reader.Game.Name == "BH3")
+            {
+                m_Header.version = 6;
+                m_Header.unityVersion = "5.x.x";
+                m_Header.unityRevision = "2017.4.18f1";
+            }
+            else if (reader.Game.Name == "SR")
+            {
+                var readHeader = m_Header.signature != "ENCR";
+                
+                if (!readHeader)
+                {
+                    m_Header.signature = "UnityFS";
+                    m_Header.version = 7;
+                    m_Header.unityVersion = "5.x.x";
+                    m_Header.unityRevision = "2019.4.32f1";
+                }
+                else
+                {
+                    m_Header.version = reader.ReadUInt32();
+                    m_Header.unityVersion = reader.ReadStringToNull();
+                    m_Header.unityRevision = reader.ReadStringToNull();
+                }
+            }
+            else
+            {
+                m_Header.version = reader.ReadUInt32();
+                m_Header.unityVersion = reader.ReadStringToNull();
+                m_Header.unityRevision = reader.ReadStringToNull();
+            }
             switch (m_Header.signature)
             {
                 case "UnityArchive":
@@ -188,12 +217,12 @@ namespace AssetStudio
 
         public void ReadFiles(Stream blocksStream, string path)
         {
-            fileList = new StreamFile[m_DirectoryInfo.Length];
+            FileList = new StreamFile[m_DirectoryInfo.Length];
             for (int i = 0; i < m_DirectoryInfo.Length; i++)
             {
                 var node = m_DirectoryInfo[i];
                 var file = new StreamFile();
-                fileList[i] = file;
+                FileList[i] = file;
                 file.path = node.path;
                 file.fileName = Path.GetFileName(node.path);
                 if (node.size >= int.MaxValue)
@@ -214,12 +243,37 @@ namespace AssetStudio
             }
         }
 
+        private void DecryptHeader(int key)
+        {
+            var rand = new XORShift128();
+            rand.InitSeed(key);
+            m_Header.flags ^= (ArchiveFlags)rand.NextDecryptInt();
+            m_Header.size ^= rand.NextDecryptLong();
+            m_Header.uncompressedBlocksInfoSize ^= rand.NextDecryptUInt();
+            m_Header.compressedBlocksInfoSize ^= rand.NextDecryptUInt();
+        }
+
         private void ReadHeader(EndianBinaryReader reader)
         {
-            m_Header.size = reader.ReadInt64();
-            m_Header.compressedBlocksInfoSize = reader.ReadUInt32();
-            m_Header.uncompressedBlocksInfoSize = reader.ReadUInt32();
-            m_Header.flags = (ArchiveFlags)reader.ReadUInt32();
+            if (reader.Game.Name == "BH3")
+            {
+                var key = reader.ReadInt32();
+                m_Header.flags = (ArchiveFlags)reader.ReadUInt32();
+                m_Header.size = reader.ReadInt64();
+                m_Header.uncompressedBlocksInfoSize = reader.ReadUInt32();
+                m_Header.compressedBlocksInfoSize = reader.ReadUInt32();
+                DecryptHeader(key);
+                var encUnityVersion = reader.ReadStringToNull();
+                var encUnityRevision = reader.ReadStringToNull();
+            }
+            else
+            {
+                m_Header.size = reader.ReadInt64();
+                m_Header.compressedBlocksInfoSize = reader.ReadUInt32();
+                m_Header.uncompressedBlocksInfoSize = reader.ReadUInt32();
+                m_Header.flags = (ArchiveFlags)reader.ReadUInt32();
+            }
+
             if (m_Header.signature != "UnityFS")
             {
                 reader.ReadByte();
@@ -229,7 +283,7 @@ namespace AssetStudio
         private void ReadBlocksInfoAndDirectory(EndianBinaryReader reader)
         {
             byte[] blocksInfoBytes;
-            if (m_Header.version >= 7)
+            if (m_Header.version >= 7 && reader.Game.Name != "SR")
             {
                 reader.AlignStream(16);
             }
@@ -276,12 +330,22 @@ namespace AssetStudio
                         blocksInfoUncompresseddStream = new MemoryStream(uncompressedBytes);
                         break;
                     }
+                case CompressionType.Lz4Mr0k: //Lz4Mr0k
+                    var blocksInfoSize = blocksInfoBytes.Length;
+                    if (Mr0k.IsMr0k(blocksInfoBytes))
+                    {
+                        Mr0k.Decrypt(ref blocksInfoBytes, ref blocksInfoSize);
+                    }
+                    goto case CompressionType.Lz4HC;
                 default:
                     throw new IOException($"Unsupported compression type {compressionType}");
             }
             using (var blocksInfoReader = new EndianBinaryReader(blocksInfoUncompresseddStream))
             {
-                var uncompressedDataHash = blocksInfoReader.ReadBytes(16);
+                if (reader.Game.Name != "SR")
+                {
+                    var uncompressedDataHash = blocksInfoReader.ReadBytes(16);
+                }
                 var blocksInfoCount = blocksInfoReader.ReadInt32();
                 m_BlocksInfo = new StorageBlock[blocksInfoCount];
                 for (int i = 0; i < blocksInfoCount; i++)
@@ -328,20 +392,23 @@ namespace AssetStudio
                         }
                     case CompressionType.Lz4: //LZ4
                     case CompressionType.Lz4HC: //LZ4HC
+                    case CompressionType.Lz4Mr0k: //Lz4Mr0k
                         {
                             var compressedSize = (int)blockInfo.compressedSize;
-                            var compressedBytes = BigArrayPool<byte>.Shared.Rent(compressedSize);
+                            var compressedBytes = new byte[compressedSize];
                             reader.Read(compressedBytes, 0, compressedSize);
+                            if (compressionType == CompressionType.Lz4Mr0k && Mr0k.IsMr0k(compressedBytes))
+                            {
+                                Mr0k.Decrypt(ref compressedBytes, ref compressedSize);
+                            }
                             var uncompressedSize = (int)blockInfo.uncompressedSize;
-                            var uncompressedBytes = BigArrayPool<byte>.Shared.Rent(uncompressedSize);
+                            var uncompressedBytes = new byte[uncompressedSize];
                             var numWrite = LZ4Codec.Decode(compressedBytes, 0, compressedSize, uncompressedBytes, 0, uncompressedSize);
                             if (numWrite != uncompressedSize)
                             {
                                 throw new IOException($"Lz4 decompression error, write {numWrite} bytes but expected {uncompressedSize} bytes");
                             }
                             blocksStream.Write(uncompressedBytes, 0, uncompressedSize);
-                            BigArrayPool<byte>.Shared.Return(compressedBytes);
-                            BigArrayPool<byte>.Shared.Return(uncompressedBytes);
                             break;
                         }
                     default:

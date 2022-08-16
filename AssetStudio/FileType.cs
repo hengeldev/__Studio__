@@ -10,7 +10,7 @@ namespace AssetStudio
     {
         AssetsFile,
         BundleFile,
-        BlkFile,
+        HoyoFile,
         WebFile,
         ResourceFile,
         GZipFile,

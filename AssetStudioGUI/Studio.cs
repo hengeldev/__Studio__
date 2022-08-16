@@ -29,11 +29,9 @@ namespace AssetStudioGUI
         Filtered
     }
 
-    internal enum ExportListType
+    public enum ExportListType
     {
-        XML,
-        JSON,
-        CSV
+        XML
     }
 
     internal static class Studio
@@ -43,6 +41,7 @@ namespace AssetStudioGUI
         public static List<AssetItem> exportableAssets = new List<AssetItem>();
         public static List<AssetItem> visibleAssets = new List<AssetItem>();
         internal static Action<string> StatusStripUpdate = x => { };
+        public static Game Game;
 
         public static int ExtractFolder(string path, string savePath)
         {
@@ -76,13 +75,13 @@ namespace AssetStudioGUI
         public static int ExtractFile(string fileName, string savePath)
         {
             int extractedCount = 0;
-            var reader = new FileReader(fileName);
+            var reader = new FileReader(fileName, Game);
             if (reader.FileType == FileType.BundleFile)
                 extractedCount += ExtractBundleFile(reader, savePath);
             else if (reader.FileType == FileType.WebFile)
                 extractedCount += ExtractWebDataFile(reader, savePath);
-            else if (reader.FileType == FileType.BlkFile)
-                extractedCount += ExtractBlkFile(reader, savePath);
+            else if (reader.FileType == FileType.HoyoFile)
+                extractedCount += ExtractHoYoFile(reader, savePath);
             else
                 reader.Dispose();
             return extractedCount;
@@ -93,10 +92,10 @@ namespace AssetStudioGUI
             StatusStripUpdate($"Decompressing {reader.FileName} ...");
             var bundleFile = new BundleFile(reader);
             reader.Dispose();
-            if (bundleFile.fileList.Length > 0)
+            if (bundleFile.FileList.Length > 0)
             {
                 var extractPath = Path.Combine(savePath, reader.FileName + "_unpacked");
-                return ExtractStreamFile(extractPath, bundleFile.fileList);
+                return ExtractStreamFile(extractPath, bundleFile.FileList);
             }
             return 0;
         }
@@ -114,15 +113,19 @@ namespace AssetStudioGUI
             return 0;
         }
 
-        private static int ExtractBlkFile(FileReader reader, string savePath)
+        private static int ExtractHoYoFile(FileReader reader, string savePath)
         {
-            BlkFile blkFile;
-            StatusStripUpdate($"Decompressing {reader.FileName} ...");
+            HoYoFile hoyoFile;
+            StatusStripUpdate($"Decompressing {reader.FileName}...");
 
             using (reader)
-                blkFile = new BlkFile(reader);
+            {
+                hoyoFile = new HoYoFile();
+                hoyoFile.LoadFile(reader);
+            }
+                
 
-            var fileList = blkFile.Files.SelectMany(x => x.Value.FileList).ToList();
+            var fileList = hoyoFile.Bundles.SelectMany(x => x.Value).ToList();
             if (fileList.Count > 0)
             {
                 var extractPath = Path.Combine(savePath, Path.GetFileNameWithoutExtension(reader.FileName));
@@ -163,10 +166,11 @@ namespace AssetStudioGUI
             for (int i = 0; i < files.Count; i++)
             {
                 var file = files[i];
-                using (var reader = new FileReader(file))
+                using (var reader = new FileReader(file, Game))
                 {
-                    var blkFile = new BlkFile(reader);
-                    var fileList = blkFile.Files.SelectMany(x => x.Value.FileList).Where(x => !x.path.Contains(".resS")).ToList();
+                    var hoyoFile = new HoYoFile();
+                    hoyoFile.LoadFile(reader);
+                    var fileList = hoyoFile.Bundles.SelectMany(x => x.Value).Where(x => !(x.path.Contains(".resS") || x.path.Contains(".resource"))).ToList();
                     foreach (var cab in fileList)
                     {
                         using (var cabReader = new FileReader(cab.stream))
@@ -178,7 +182,13 @@ namespace AssetStudioGUI
                             {
                                 var objectReader = new ObjectReader(assetsFile.reader, assetsFile, obj);
                                 objectReader.Reset();
-                                string name = string.Empty;
+                                var asset = new AssetEntry()
+                                {
+                                    SourcePath = reader.FullPath,
+                                    PathID = objectReader.m_PathID,
+                                    Type = objectReader.type
+                                };
+                                var exportable = true;
                                 switch (objectReader.type)
                                 {
                                     case ClassIDType.GameObject:
@@ -187,38 +197,41 @@ namespace AssetStudioGUI
                                         {
                                             NameLUT.Add(objectReader.m_PathID, gameObject.m_Name);
                                         }
+                                        exportable = false;
                                         break;
                                     case ClassIDType.Shader:
-                                        name = objectReader.ReadAlignedString();
-                                        if (string.IsNullOrEmpty(name))
+                                        asset.Name = objectReader.ReadAlignedString();
+                                        if (string.IsNullOrEmpty(asset.Name))
                                         {
                                             var m_parsedForm = new SerializedShader(objectReader);
-                                            name = m_parsedForm.m_Name;
+                                            asset.Name = m_parsedForm.m_Name;
                                         }
                                         break;
                                     case ClassIDType.Animator:
                                         var gameObjectPPtr = new PPtr<GameObject>(objectReader);
                                         PPtrLUT.Add((assets.Count, gameObjectPPtr.m_PathID));
-                                        name = "AnimatorPlaceholder";
+                                        asset.Name = "AnimatorPlaceholder";
                                         break;
                                     case ClassIDType.MiHoYoBinData:
                                         if (indexObject.Names.TryGetValue(objectReader.m_PathID, out var binName))
                                         {
                                             var path = ResourceIndex.GetContainerFromBinName(reader.FileName, binName);
-                                            name = !string.IsNullOrEmpty(path) ? Path.GetFileName(path) : binName;
+                                            asset.Name = !string.IsNullOrEmpty(path) ? Path.GetFileName(path) : binName;
                                         }
+                                        exportable = IndexObject.Exportable;
                                         break;
                                     case ClassIDType.IndexObject:
                                         indexObject = new IndexObject(objectReader);
-                                        name = "IndexObject";
+                                        asset.Name = "IndexObject";
+                                        exportable = IndexObject.Exportable;
                                         break;
                                     default:
-                                        name = objectReader.ReadAlignedString();
+                                        asset.Name = objectReader.ReadAlignedString();
                                         break;
                                 }
-                                if (!string.IsNullOrEmpty(name))
+                                if (exportable)
                                 {
-                                    assets.Add(new AssetEntry(name, reader.FullPath, objectReader.m_PathID, objectReader.type));
+                                    assets.Add(asset);
                                 }
                             }
                         }
@@ -330,17 +343,23 @@ namespace AssetStudioGUI
                                 var preloadEnd = preloadIndex + preloadSize;
                                 for (int k = preloadIndex; k < preloadEnd; k++)
                                 {
-                                    if (long.TryParse(m_Container.Key, out var containerValue))
+                                    if (Game.Name == "GI")
                                     {
-                                        var last = unchecked((uint)containerValue);
-                                        var path = ResourceIndex.GetBundlePath(last);
-                                        if (!string.IsNullOrEmpty(path))
+                                        if (long.TryParse(m_Container.Key, out var containerValue))
                                         {
-                                            containers.Add((m_AssetBundle.PreloadTable[k], path));
-                                            continue;
+                                            var last = unchecked((uint)containerValue);
+                                            var path = ResourceIndex.GetBundlePath(last);
+                                            if (!string.IsNullOrEmpty(path))
+                                            {
+                                                containers.Add((m_AssetBundle.PreloadTable[k], path));
+                                                continue;
+                                            }
                                         }
                                     }
-                                    containers.Add((m_AssetBundle.PreloadTable[k], m_Container.Key));
+                                    else
+                                    {
+                                        containers.Add((m_AssetBundle.PreloadTable[k], m_Container.Key));
+                                    }
                                 }
                             }
                             assetItem.Text = m_AssetBundle.m_Name;
@@ -651,15 +670,6 @@ namespace AssetStudioGUI
                             )
                         );
                         doc.Save(filename);
-                        break;
-                    case ExportListType.JSON:
-                        filename = Path.Combine(savePath, "assets_map.json");
-                        using (StreamWriter file = File.CreateText(filename))
-                        {
-                            JsonSerializer serializer = new JsonSerializer() { Formatting = Formatting.Indented };
-                            serializer.Converters.Add(new StringEnumConverter());
-                            serializer.Serialize(file, toExportAssets);
-                        }
                         break;
                 }
 

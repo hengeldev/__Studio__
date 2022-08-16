@@ -43,6 +43,8 @@
             this.displayInfo = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem14 = new System.Windows.Forms.ToolStripMenuItem();
             this.specifyUnityVersion = new System.Windows.Forms.ToolStripTextBox();
+            this.toolStripMenuItem17 = new System.Windows.Forms.ToolStripMenuItem();
+            this.specifyGame = new System.Windows.Forms.ToolStripComboBox();
             this.toolStripMenuItem16 = new System.Windows.Forms.ToolStripMenuItem();
             this.specifyAIVersion = new System.Windows.Forms.ToolStripComboBox();
             this.showExpOpt = new System.Windows.Forms.ToolStripMenuItem();
@@ -80,12 +82,11 @@
             this.exportClassStructuresMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.console = new System.Windows.Forms.ToolStripMenuItem();
             this.miscToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.buildBLKMapToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.buildCABMapToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.buildAssetMapToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabPage1 = new System.Windows.Forms.TabPage();
-            this.sceneTreeView = new AssetStudioGUI.GOHierarchy();
             this.treeSearch = new System.Windows.Forms.TextBox();
             this.tabPage2 = new System.Windows.Forms.TabPage();
             this.assetListView = new System.Windows.Forms.ListView();
@@ -132,6 +133,7 @@
             this.exportAnimatorwithselectedAnimationClipMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.goToSceneHierarchyToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.showOriginalFileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.sceneTreeView = new AssetStudioGUI.GOHierarchy();
             this.menuStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
@@ -221,6 +223,7 @@
             this.enablePreview,
             this.displayInfo,
             this.toolStripMenuItem14,
+            this.toolStripMenuItem17,
             this.toolStripMenuItem16,
             this.showExpOpt});
             this.optionsToolStripMenuItem.Name = "optionsToolStripMenuItem";
@@ -275,6 +278,20 @@
             this.specifyUnityVersion.Name = "specifyUnityVersion";
             this.specifyUnityVersion.Size = new System.Drawing.Size(100, 23);
             // 
+            // toolStripMenuItem17
+            // 
+            this.toolStripMenuItem17.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.specifyGame});
+            this.toolStripMenuItem17.Name = "toolStripMenuItem17";
+            this.toolStripMenuItem17.Size = new System.Drawing.Size(207, 22);
+            this.toolStripMenuItem17.Text = "Specify Game";
+            // 
+            // specifyGame
+            // 
+            this.specifyGame.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.specifyGame.Name = "specifyGame";
+            this.specifyGame.Size = new System.Drawing.Size(121, 23);
+            // 
             // toolStripMenuItem16
             // 
             this.toolStripMenuItem16.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
@@ -290,7 +307,6 @@
             "None"});
             this.specifyAIVersion.Name = "specifyAIVersion";
             this.specifyAIVersion.Size = new System.Drawing.Size(121, 23);
-            this.specifyAIVersion.Text = "None";
             this.specifyAIVersion.SelectedIndexChanged += new System.EventHandler(this.toolStripComboBox1_SelectedIndexChanged);
             // 
             // showExpOpt
@@ -565,18 +581,18 @@
             // miscToolStripMenuItem
             // 
             this.miscToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.buildBLKMapToolStripMenuItem,
+            this.buildCABMapToolStripMenuItem,
             this.buildAssetMapToolStripMenuItem});
             this.miscToolStripMenuItem.Name = "miscToolStripMenuItem";
             this.miscToolStripMenuItem.Size = new System.Drawing.Size(47, 20);
             this.miscToolStripMenuItem.Text = "Misc.";
             // 
-            // buildBLKMapToolStripMenuItem
+            // buildCABMapToolStripMenuItem
             // 
-            this.buildBLKMapToolStripMenuItem.Name = "buildBLKMapToolStripMenuItem";
-            this.buildBLKMapToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
-            this.buildBLKMapToolStripMenuItem.Text = "Build BLKMap";
-            this.buildBLKMapToolStripMenuItem.Click += new System.EventHandler(this.buildBLKMapToolStripMenuItem_Click);
+            this.buildCABMapToolStripMenuItem.Name = "buildCABMapToolStripMenuItem";
+            this.buildCABMapToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.buildCABMapToolStripMenuItem.Text = "Build CABMap";
+            this.buildCABMapToolStripMenuItem.Click += new System.EventHandler(this.buildBLKMapToolStripMenuItem_Click);
             // 
             // buildAssetMapToolStripMenuItem
             // 
@@ -633,17 +649,6 @@
             this.tabPage1.TabIndex = 0;
             this.tabPage1.Text = "Scene Hierarchy";
             this.tabPage1.UseVisualStyleBackColor = true;
-            // 
-            // sceneTreeView
-            // 
-            this.sceneTreeView.CheckBoxes = true;
-            this.sceneTreeView.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.sceneTreeView.HideSelection = false;
-            this.sceneTreeView.Location = new System.Drawing.Point(0, 20);
-            this.sceneTreeView.Name = "sceneTreeView";
-            this.sceneTreeView.Size = new System.Drawing.Size(472, 589);
-            this.sceneTreeView.TabIndex = 1;
-            this.sceneTreeView.AfterCheck += new System.Windows.Forms.TreeViewEventHandler(this.sceneTreeView_AfterCheck);
             // 
             // treeSearch
             // 
@@ -1124,6 +1129,17 @@
             this.showOriginalFileToolStripMenuItem.Visible = false;
             this.showOriginalFileToolStripMenuItem.Click += new System.EventHandler(this.showOriginalFileToolStripMenuItem_Click);
             // 
+            // sceneTreeView
+            // 
+            this.sceneTreeView.CheckBoxes = true;
+            this.sceneTreeView.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.sceneTreeView.HideSelection = false;
+            this.sceneTreeView.Location = new System.Drawing.Point(0, 20);
+            this.sceneTreeView.Name = "sceneTreeView";
+            this.sceneTreeView.Size = new System.Drawing.Size(472, 589);
+            this.sceneTreeView.TabIndex = 1;
+            this.sceneTreeView.AfterCheck += new System.Windows.Forms.TreeViewEventHandler(this.sceneTreeView_AfterCheck);
+            // 
             // AssetStudioGUIForm
             // 
             this.AllowDrop = true;
@@ -1271,10 +1287,12 @@
         private System.Windows.Forms.ToolStripTextBox specifyUnityVersion;
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem15;
         private System.Windows.Forms.ToolStripMenuItem miscToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem buildBLKMapToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem buildCABMapToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem console;
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem16;
         private System.Windows.Forms.ToolStripComboBox specifyAIVersion;
+        private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem17;
+        private System.Windows.Forms.ToolStripComboBox specifyGame;
         private System.Windows.Forms.ToolStripMenuItem buildAssetMapToolStripMenuItem;
     }
 }

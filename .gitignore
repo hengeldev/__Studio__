@@ -339,3 +339,4 @@ ASALocalRun/
 # BeatPulse healthcheck temp database
 healthchecksdb
 /AssetStudioCLI/Properties/launchSettings.json
+/AssetStudioGUI/Properties/launchSettings.json

@@ -3,7 +3,7 @@ using AssetStudio;
 
 namespace AssetStudioGUI
 {
-    internal class AssetItem : ListViewItem
+    public class AssetItem : ListViewItem
     {
         public Object Asset;
         public SerializedFile SourceFile;

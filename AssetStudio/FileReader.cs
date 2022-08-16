@@ -15,17 +15,20 @@ namespace AssetStudio
         private static readonly byte[] zipMagic = { 0x50, 0x4B, 0x03, 0x04 };
         private static readonly byte[] zipSpannedMagic = { 0x50, 0x4B, 0x07, 0x08 };
 
-        public FileReader(string path) : this(path, File.Open(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite)) { }
+        public FileReader(string path, Game game = null) : this(path, File.Open(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite), game) { }
 
-        public FileReader(string path, Stream stream) : base(stream, EndianType.BigEndian)
+        public FileReader(string path, Stream stream, Game game = null) : base(stream, EndianType.BigEndian, game)
         {
+            Game = game;
             FullPath = Path.GetFullPath(path);
             FileName = Path.GetFileName(path);
             FileType = CheckFileType();
             Length = stream.Length;
+            
         }
-        public FileReader(Stream stream) : base(stream, EndianType.BigEndian)
+        public FileReader(Stream stream, Game game = null) : base(stream, EndianType.BigEndian, game)
         {
+            Game = game;
             FullPath = "";
             FileName = "";
             FileType = CheckFileType();
@@ -34,6 +37,15 @@ namespace AssetStudio
 
         private FileType CheckFileType()
         {
+            if (IsSerializedFile())
+            {
+                return FileType.AssetsFile;
+            }
+            else if (Game != null)
+            {
+                return FileType.HoyoFile;
+            }
+
             var signature = this.ReadStringToNull(20);
             Position = 0;
             switch (signature)
@@ -43,8 +55,6 @@ namespace AssetStudio
                 case "UnityArchive":
                 case "UnityFS":
                     return FileType.BundleFile;
-                case "blk":
-                    return FileType.BlkFile;
                 case "UnityWebData1.0":
                     return FileType.WebFile;
                 default:

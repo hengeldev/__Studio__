@@ -63,8 +63,12 @@ namespace AssetStudio
                 Container[i] = new KeyValuePair<string, AssetInfo>(reader.ReadAlignedString(), new AssetInfo(reader));
             }
 
-            MainAsset = new AssetInfo(reader);
-            RuntimeComaptability = reader.ReadUInt32();
+            if (reader.Game.Name == "GI")
+            {
+                MainAsset = new AssetInfo(reader);
+                RuntimeComaptability = reader.ReadUInt32();
+            }
+
             AssetBundleName = reader.ReadAlignedString();
             DependencyCount = reader.ReadInt32();
             Dependencies = new string[DependencyCount];
@@ -72,16 +76,19 @@ namespace AssetStudio
             {
                 Dependencies[k] = reader.ReadAlignedString();
             }
-            reader.AlignStream();
-            IsStreamedScenessetBundle = reader.ReadBoolean();
-            reader.AlignStream();
-            ExplicitDataLayout = reader.ReadInt32();
-            PathFlags = reader.ReadInt32();
-            SceneHashCount = reader.ReadInt32();
-            SceneHashes = new KeyValuePair<string, string>[SceneHashCount];
-            for (int l = 0; l < SceneHashCount; l++)
+            if (reader.Game.Name == "GI")
             {
-                SceneHashes[l] = new KeyValuePair<string, string>(reader.ReadAlignedString(), reader.ReadAlignedString());
+                reader.AlignStream();
+                IsStreamedScenessetBundle = reader.ReadBoolean();
+                reader.AlignStream();
+                ExplicitDataLayout = reader.ReadInt32();
+                PathFlags = reader.ReadInt32();
+                SceneHashCount = reader.ReadInt32();
+                SceneHashes = new KeyValuePair<string, string>[SceneHashCount];
+                for (int l = 0; l < SceneHashCount; l++)
+                {
+                    SceneHashes[l] = new KeyValuePair<string, string>(reader.ReadAlignedString(), reader.ReadAlignedString());
+                }
             }
         }
     }

@@ -95,32 +95,11 @@ namespace AssetStudioGUI
         [DllImport("gdi32.dll")]
         private static extern IntPtr AddFontMemResourceEx(IntPtr pbFont, uint cbFont, IntPtr pdv, [In] ref uint pcFonts);
 
-        [DllImport("kernel32.dll", SetLastError = true)]
-        [return: MarshalAs(UnmanagedType.Bool)]
-        static extern bool AllocConsole();
-        
-        [DllImport("kernel32.dll", SetLastError = true)]
-        [return: MarshalAs(UnmanagedType.Bool)]
-        static extern bool SetConsoleTitle(string lpConsoleTitle);
-
-        [DllImport("kernel32.dll", SetLastError = true)]
-        [return: MarshalAs(UnmanagedType.Bool)]
-        static extern bool FreeConsole();
-
-        [DllImport("kernel32.dll", SetLastError = true)]
-        static extern IntPtr GetConsoleWindow();
-
-        [DllImport("user32.dll", SetLastError = true)]
-        [return: MarshalAs(UnmanagedType.Bool)]
-        static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
-
-        const int SW_HIDE = 0;
-        const int SW_SHOW = 5;
         public AssetStudioGUIForm()
         {
             Thread.CurrentThread.CurrentCulture = new CultureInfo("en-US");
             InitializeComponent();
-            Text = $"GenshinStudio v{Application.ProductVersion}";
+            Text = $"HoYoStudio v{Application.ProductVersion}";
             delayTimer = new System.Timers.Timer(800);
             delayTimer.Elapsed += new ElapsedEventHandler(delayTimer_Elapsed);
             console.Checked = Properties.Settings.Default.console;
@@ -132,30 +111,35 @@ namespace AssetStudioGUI
             Renderer.Parsable = !Properties.Settings.Default.disableRndrr;
             MiHoYoBinData.doXOR = Properties.Settings.Default.enableXor;
             MiHoYoBinData.Key = Properties.Settings.Default.key;
-            AllocConsole();
-            SetConsoleTitle("Debug Console");
+            ConsoleHelper.AllocConsole();
+            ConsoleHelper.SetConsoleTitle("Debug Console");
             FMODinit();
 
             logger = new GUILogger(StatusStripUpdate);
-            var handle = GetConsoleWindow();
+            var handle = ConsoleHelper.GetConsoleWindow();
             if (console.Checked)
             {
                 Logger.Default = new ConsoleLogger();
-                ShowWindow(handle, SW_SHOW);
+                ConsoleHelper.ShowWindow(handle, ConsoleHelper.SW_SHOW);
             }
             else
             {
                 Logger.Default = logger;
-                ShowWindow(handle, SW_HIDE);
+                ConsoleHelper.ShowWindow(handle, ConsoleHelper.SW_HIDE);
             }
             Progress.Default = new Progress<int>(SetProgressBarValue);
             Studio.StatusStripUpdate = StatusStripUpdate;
             specifyAIVersion.Items.AddRange(AIVersionManager.GetVersions());
-            AsbManager.LoadBLKMap();
+            specifyGame.Items.AddRange(GameManager.GetGames());
+            Studio.Game = GameManager.GetGame(Properties.Settings.Default.selectedGame);
+            specifyGame.SelectedIndex = Properties.Settings.Default.selectedGame;
+            specifyGame.SelectedIndexChanged += new EventHandler(toolStripComboBox2_SelectedIndexChanged);
+            Logger.Info($"Target Game is {Studio.Game.DisplayName}");
+            CABManager.LoadMap(Studio.Game);
         }
         ~AssetStudioGUIForm()
         {
-            FreeConsole();
+            ConsoleHelper.FreeConsole();
         }
 
         private void AssetStudioGUIForm_DragEnter(object sender, DragEventArgs e)
@@ -173,6 +157,7 @@ namespace AssetStudioGUI
             {
                 ResetForm();
                 assetsManager.SpecifyUnityVersion = specifyUnityVersion.Text;
+                assetsManager.Game = Studio.Game;
                 if (paths.Length == 1 && Directory.Exists(paths[0]))
                 {
                     await Task.Run(() => assetsManager.LoadFolder(paths[0]));
@@ -193,6 +178,7 @@ namespace AssetStudioGUI
                 ResetForm();
                 openDirectoryBackup = Path.GetDirectoryName(openFileDialog1.FileNames[0]);
                 assetsManager.SpecifyUnityVersion = specifyUnityVersion.Text;
+                assetsManager.Game = Studio.Game;
                 await Task.Run(() => assetsManager.LoadFiles(openFileDialog1.FileNames));
                 BuildAssetStructures();
             }
@@ -207,6 +193,7 @@ namespace AssetStudioGUI
                 ResetForm();
                 openDirectoryBackup = openFolderDialog.Folder;
                 assetsManager.SpecifyUnityVersion = specifyUnityVersion.Text;
+                assetsManager.Game = Studio.Game;
                 await Task.Run(() => assetsManager.LoadFolder(openFolderDialog.Folder));
                 BuildAssetStructures();
             }
@@ -258,11 +245,11 @@ namespace AssetStudioGUI
 
             if (!string.IsNullOrEmpty(productName))
             {
-                Text = $"GenshinStudio v{Application.ProductVersion} - {productName} - {Path.GetFileName(assetsManager.assetsFileList[0].originalPath)} - {assetsManager.assetsFileList[0].unityVersion} - {assetsManager.assetsFileList[0].m_TargetPlatform}";
+                Text = $"HoYoStudio v{Application.ProductVersion} - {productName} - {Path.GetFileName(assetsManager.assetsFileList[0].originalPath)} - {assetsManager.assetsFileList[0].unityVersion} - {assetsManager.assetsFileList[0].m_TargetPlatform}";
             }
             else
             {
-                Text = $"GenshinStudio v{Application.ProductVersion} - Genshin Impact - {Path.GetFileName(assetsManager.assetsFileList[0].originalPath)} - {assetsManager.assetsFileList[0].unityVersion} - {assetsManager.assetsFileList[0].m_TargetPlatform}";
+                Text = $"HoYoStudio v{Application.ProductVersion} - {Studio.Game.DisplayName} - {Path.GetFileName(assetsManager.assetsFileList[0].originalPath)} - {assetsManager.assetsFileList[0].unityVersion} - {assetsManager.assetsFileList[0].m_TargetPlatform}";
             }
 
             assetListView.VirtualListSize = visibleAssets.Count;
@@ -424,16 +411,16 @@ namespace AssetStudioGUI
             Properties.Settings.Default.console = console.Checked;
             Properties.Settings.Default.Save();
 
-            var handle = GetConsoleWindow();
+            var handle = ConsoleHelper.GetConsoleWindow();
             if (console.Checked)
             {
                 Logger.Default = new ConsoleLogger();
-                ShowWindow(handle, SW_SHOW);
+                ConsoleHelper.ShowWindow(handle, ConsoleHelper.SW_SHOW);
             }
             else
             {
                 Logger.Default = logger;
-                ShowWindow(handle, SW_HIDE);
+                ConsoleHelper.ShowWindow(handle, ConsoleHelper.SW_HIDE);
             }
         }
 
@@ -772,7 +759,7 @@ namespace AssetStudioGUI
                         PreviewAudioClip(assetItem, m_AudioClip);
                         break;
                     case Shader m_Shader:
-                        StatusStripUpdate("Only supported export.");
+                        PreviewShader(m_Shader);
                         break;
                     case TextAsset m_TextAsset:
                         PreviewTextAsset(m_TextAsset);
@@ -1011,11 +998,17 @@ namespace AssetStudioGUI
             FMODtimerLabel.Text = $"0:0.0 / {FMODlenms / 1000 / 60}:{FMODlenms / 1000 % 60}.{FMODlenms / 10 % 100}";
         }
 
-        //private void PreviewShader(Shader m_Shader)
-        //{
-        //    var strBytes = ShaderConverter.Convert(m_Shader);
-        //    PreviewText(strBytes.Length == 0 ? "Serialized Shader can't be read" : Encoding.UTF8.GetString(strBytes).Replace("\n", "\r\n"));
-        //}
+        private void PreviewShader(Shader m_Shader)
+        {
+            if (m_Shader.byteSize > 0xFFFFFFF)
+            {
+                PreviewText("Serialized Shader can't be read");
+                return;
+            }
+
+            var str = ShaderConverter.Convert(m_Shader, Studio.Game);
+            PreviewText(str == null ? "Serialized Shader can't be read" : str.Replace("\n", "\r\n"));
+        }
 
         private void PreviewTextAsset(TextAsset m_TextAsset)
         {
@@ -1310,7 +1303,7 @@ namespace AssetStudioGUI
 
         private void ResetForm()
         {
-            Text = $"GenshinStudio v{Application.ProductVersion}";
+            Text = $"HoYoStudio v{Application.ProductVersion}";
             assetsManager.Clear();
             assemblyLoader.Clear();
             exportableAssets.Clear();
@@ -2145,25 +2138,25 @@ namespace AssetStudioGUI
         private async void buildBLKMapToolStripMenuItem_Click(object sender, EventArgs e)
         {
             var openFolderDialog = new OpenFolderDialog();
-            openFolderDialog.Title = "Select GenshinImpact/YuanShen_Data Folder";
+            openFolderDialog.Title = $"Select {Studio.Game.Path} Folder";
             if (openFolderDialog.ShowDialog(this) == DialogResult.OK)
             {
-                Logger.Info("scanning for BLK files");
-                var files = Directory.GetFiles(openFolderDialog.Folder, "*.blk", SearchOption.AllDirectories).ToList();
-                Logger.Info(string.Format("found {0} BLK files", files.Count()));
-                await Task.Run(() => AsbManager.BuildBLKMap(files));
+                Logger.Info("scanning for files");
+                var files = Directory.GetFiles(openFolderDialog.Folder, $"*{Studio.Game.Extension}", SearchOption.AllDirectories).ToList();
+                Logger.Info(string.Format("found {0} files", files.Count()));
+                await Task.Run(() => CABManager.BuildMap(files, Studio.Game));
             }
         }
 
         private async void buildAssetMapToolStripMenuItem_Click(object sender, EventArgs e)
         {
             var openFolderDialog = new OpenFolderDialog();
-            openFolderDialog.Title = "Select GenshinImpact/YuanShen_Data Folder";
+            openFolderDialog.Title = $"Select {Studio.Game.Path} Folder";
             if (openFolderDialog.ShowDialog(this) == DialogResult.OK)
             {
-                Logger.Info("scanning for BLK files");
-                var files = Directory.GetFiles(openFolderDialog.Folder, "*.blk", SearchOption.AllDirectories).ToList();
-                Logger.Info(string.Format("found {0} BLK files", files.Count()));
+                Logger.Info("scanning for files");
+                var files = Directory.GetFiles(openFolderDialog.Folder, $"*{Studio.Game.Extension}", SearchOption.AllDirectories).ToList();
+                Logger.Info(string.Format("found {0} files", files.Count()));
                 
                 var saveFolderDialog = new OpenFolderDialog();
                 saveFolderDialog.InitialFolder = saveDirectoryBackup;
@@ -2173,8 +2166,7 @@ namespace AssetStudioGUI
                     timer.Stop();
                     saveDirectoryBackup = saveFolderDialog.Folder;
                     List<AssetEntry> toExportAssets = await Task.Run(() => BuildAssetMap(files));
-                    var exportFormat = (ExportListType)Properties.Settings.Default.assetsMapFormat;
-                    ExportAssetsMap(saveFolderDialog.Folder, toExportAssets, exportFormat);
+                    ExportAssetsMap(saveFolderDialog.Folder, toExportAssets, ExportListType.XML);
                 }
             }
         }
@@ -2205,6 +2197,21 @@ namespace AssetStudioGUI
             }
             await Task.Run(() => ResourceIndex.FromFile(path));
             SpecifyAIVersionUpdate(true);
+        }
+
+        private void toolStripComboBox2_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            optionsToolStripMenuItem.DropDown.Visible = false;
+            Properties.Settings.Default.selectedGame = specifyGame.SelectedIndex;
+            Properties.Settings.Default.Save();
+
+            Studio.Game = GameManager.GetGame(Properties.Settings.Default.selectedGame);
+            Logger.Info($"Target Game is {Studio.Game.DisplayName}");
+
+            ResetForm();
+            assetsManager.SpecifyUnityVersion = specifyUnityVersion.Text;
+            assetsManager.Game = Studio.Game;
+            CABManager.LoadMap(Studio.Game);
         }
 
         private void SpecifyAIVersionUpdate(bool value)

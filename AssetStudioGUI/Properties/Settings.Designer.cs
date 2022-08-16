@@ -105,6 +105,21 @@ namespace AssetStudioGUI.Properties
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        public int selectedGame
+        {
+            get
+            {
+                return ((int)(this["selectedGame"]));
+            }
+            set
+            {
+                this["selectedGame"] = value;
+            }
+        }
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0")]
         public int assetGroupOption
         {
             get
@@ -239,16 +254,16 @@ namespace AssetStudioGUI.Properties
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("0")]
-        public int assetsMapFormat
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool ignoreController
         {
             get
             {
-                return ((int)(this["assetsMapFormat"]));
+                return ((bool)(this["ignoreController"]));
             }
             set
             {
-                this["assetsMapFormat"] = value;
+                this["ignoreController"] = value;
             }
         }
 

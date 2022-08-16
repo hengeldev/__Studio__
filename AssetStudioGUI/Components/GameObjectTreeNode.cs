@@ -3,7 +3,7 @@ using AssetStudio;
 
 namespace AssetStudioGUI
 {
-    internal class GameObjectTreeNode : TreeNode
+    public class GameObjectTreeNode : TreeNode
     {
         public GameObject gameObject;
 

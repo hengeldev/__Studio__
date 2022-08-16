@@ -10,6 +10,7 @@ namespace AssetStudio
 {
     public class AssetsManager
     {
+        public Game Game;
         public bool ResolveDependancies = true;
         public string SpecifyUnityVersion;
         public List<SerializedFile> assetsFileList = new List<SerializedFile>();
@@ -24,7 +25,7 @@ namespace AssetStudio
         public void LoadFiles(params string[] files)
         {
             if (ResolveDependancies)
-                AsbManager.ProcessDependancies(ref files);
+                CABManager.ProcessDependencies(ref files);
             var path = Path.GetDirectoryName(Path.GetFullPath(files[0]));
             MergeSplitAssets(path);
             var toReadFile = ProcessingSplitFiles(files.ToList());
@@ -59,7 +60,7 @@ namespace AssetStudio
             importFiles.Clear();
             importFilesHash.Clear();
             assetsFileListHash.Clear();
-            AsbManager.offsets.Clear();
+            CABManager.offsets.Clear();
 
             ReadAssets();
             ProcessAssets();
@@ -67,7 +68,7 @@ namespace AssetStudio
 
         private void LoadFile(string fullName)
         {
-            var reader = new FileReader(fullName);
+            var reader = new FileReader(fullName, Game);
             LoadFile(reader);
         }
 
@@ -81,8 +82,8 @@ namespace AssetStudio
                 case FileType.BundleFile:
                     LoadBundleFile(reader);
                     break;
-                case FileType.BlkFile:
-                    LoadBlkFile(reader);
+                case FileType.HoyoFile:
+                    LoadHoYoFile(reader);
                     break;
                 case FileType.WebFile:
                     LoadWebFile(reader);
@@ -156,7 +157,7 @@ namespace AssetStudio
             try
             {
                 var bundleFile = new BundleFile(reader);
-                foreach (var file in bundleFile.fileList)
+                foreach (var file in bundleFile.FileList)
                 {
                     var dummyPath = Path.Combine(Path.GetDirectoryName(reader.FullPath), file.fileName);
                     var subReader = new FileReader(dummyPath, file.stream);
@@ -322,20 +323,21 @@ namespace AssetStudio
             }
         }
 
-        private void LoadBlkFile(FileReader reader)
+        private void LoadHoYoFile(FileReader reader)
         {
             Logger.Info("Loading " + reader.FileName);
             try
             {
-                BlkFile blkFile;
-                reader.MHY0Pos = AsbManager.offsets.TryGetValue(reader.FullPath, out var list) ? list.ToArray() : Array.Empty<long>();
-                blkFile = new BlkFile(reader);
-                foreach (var mhy0 in blkFile.Files)
+                HoYoFile hoyoFile;
+                reader.BundlePos = CABManager.offsets.TryGetValue(reader.FullPath, out var list) ? list.ToArray() : Array.Empty<long>();
+                hoyoFile = new HoYoFile();
+                hoyoFile.LoadFile(reader);
+                foreach (var bundle in hoyoFile.Bundles)
                 {
-                    foreach (var file in mhy0.Value.FileList)
+                    foreach (var file in bundle.Value)
                     {
                         var dummyPath = Path.Combine(Path.GetDirectoryName(reader.FullPath), file.fileName);
-                        var cabReader = new FileReader(dummyPath, file.stream);
+                        var cabReader = new FileReader(dummyPath, file.stream, Game);
                         if (cabReader.FileType == FileType.AssetsFile)
                         {
                             var assetsFile = new SerializedFile(cabReader, this, reader.FullPath);
@@ -352,7 +354,7 @@ namespace AssetStudio
             }
             catch (Exception e)
             {
-                Logger.Error($"Error while reading blk file {reader.FileName}", e);
+                Logger.Error($"Error while reading file {reader.FileName}", e);
             }
             finally
             {

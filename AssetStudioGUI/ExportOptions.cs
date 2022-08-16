@@ -28,7 +28,7 @@ namespace AssetStudioGUI
             disableRndrr.Checked = Properties.Settings.Default.disableRndrr;
             key.Value = Properties.Settings.Default.key;
             enableXor.Checked = Properties.Settings.Default.enableXor;
-            assetsMapFormat.SelectedIndex = Properties.Settings.Default.assetsMapFormat;
+            ignoreController.Checked = Properties.Settings.Default.ignoreController;
             eulerFilter.Checked = Properties.Settings.Default.eulerFilter;
             filterPrecision.Value = Properties.Settings.Default.filterPrecision;
             exportAllNodes.Checked = Properties.Settings.Default.exportAllNodes;
@@ -68,7 +68,7 @@ namespace AssetStudioGUI
             Properties.Settings.Default.enableXor = enableXor.Checked;
             MiHoYoBinData.Key = (byte)key.Value;
             MiHoYoBinData.doXOR = enableXor.Checked;
-            Properties.Settings.Default.assetsMapFormat = assetsMapFormat.SelectedIndex;
+            Properties.Settings.Default.ignoreController = ignoreController.Checked;
             Properties.Settings.Default.eulerFilter = eulerFilter.Checked;
             Properties.Settings.Default.filterPrecision = filterPrecision.Value;
             Properties.Settings.Default.exportAllNodes = exportAllNodes.Checked;

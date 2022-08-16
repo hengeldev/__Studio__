@@ -10,10 +10,11 @@ namespace AssetStudio
 
         public EndianType Endian;
 
-        public EndianBinaryReader(Stream stream, EndianType endian = EndianType.BigEndian) : base(stream)
+        public EndianBinaryReader(Stream stream, EndianType endian = EndianType.BigEndian, Game game = null) : base(stream)
         {
             Endian = endian;
             buffer = new byte[8];
+            Game = game;
         }
 
         public long Position
@@ -22,7 +23,8 @@ namespace AssetStudio
             set => BaseStream.Position = value;
         }
 
-        public long[] MHY0Pos = Array.Empty<long>();
+        public long[] BundlePos = Array.Empty<long>();
+        public Game Game;
 
         public override short ReadInt16()
         {

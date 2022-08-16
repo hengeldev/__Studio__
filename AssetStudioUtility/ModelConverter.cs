@@ -22,16 +22,18 @@ namespace AssetStudio
         private Dictionary<Texture2D, string> textureNameDictionary = new Dictionary<Texture2D, string>();
         private Dictionary<Transform, ImportedFrame> transformDictionary = new Dictionary<Transform, ImportedFrame>();
         Dictionary<uint, string> morphChannelNames = new Dictionary<uint, string>();
+        private Game Game;
 
-        public ModelConverter(GameObject m_GameObject, ImageFormat imageFormat, AnimationClip[] animationList = null)
+        public ModelConverter(GameObject m_GameObject, ImageFormat imageFormat, Game game, AnimationClip[] animationList = null, bool ignoreController = true)
         {
+            Game = game;
             this.imageFormat = imageFormat;
             if (m_GameObject.m_Animator != null)
             {
                 InitWithAnimator(m_GameObject.m_Animator);
                 if (animationList == null)
                 {
-                    CollectAnimationClip(m_GameObject.m_Animator);
+                    CollectAnimationClip(m_GameObject.m_Animator, ignoreController);
                 }
             }
             else
@@ -48,15 +50,16 @@ namespace AssetStudio
             ConvertAnimations();
         }
 
-        public ModelConverter(string rootName, List<GameObject> m_GameObjects, ImageFormat imageFormat, AnimationClip[] animationList = null)
+        public ModelConverter(string rootName, List<GameObject> m_GameObjects, ImageFormat imageFormat, Game game, AnimationClip[] animationList = null, bool ignoreController = true)
         {
+            Game = game;
             this.imageFormat = imageFormat;
             RootFrame = CreateFrame(rootName, Vector3.Zero, new Quaternion(0, 0, 0, 0), Vector3.One);
             foreach (var m_GameObject in m_GameObjects)
             {
                 if (m_GameObject.m_Animator != null && animationList == null)
                 {
-                    CollectAnimationClip(m_GameObject.m_Animator);
+                    CollectAnimationClip(m_GameObject.m_Animator, ignoreController);
                 }
 
                 var m_Transform = m_GameObject.m_Transform;
@@ -78,13 +81,14 @@ namespace AssetStudio
             ConvertAnimations();
         }
 
-        public ModelConverter(Animator m_Animator, ImageFormat imageFormat, AnimationClip[] animationList = null)
+        public ModelConverter(Animator m_Animator, ImageFormat imageFormat, Game game, AnimationClip[] animationList = null, bool ignoreController = true)
         {
+            Game = game;
             this.imageFormat = imageFormat;
             InitWithAnimator(m_Animator);
             if (animationList == null)
             {
-                CollectAnimationClip(m_Animator);
+                CollectAnimationClip(m_Animator, ignoreController);
             }
             else
             {
@@ -180,9 +184,9 @@ namespace AssetStudio
             }
         }
 
-        private void CollectAnimationClip(Animator m_Animator)
+        private void CollectAnimationClip(Animator m_Animator, bool ignoreController = true)
         {
-            if (m_Animator.m_Controller.TryGet(out var m_Controller))
+            if (m_Animator.m_Controller.TryGet(out var m_Controller) && !ignoreController)
             {
                 switch (m_Controller)
                 {
@@ -882,7 +886,7 @@ namespace AssetStudio
                     var m_ClipBindingConstant = animationClip.m_ClipBindingConstant ?? m_Clip.ConvertValueArrayToGenericBinding();
                     var m_ACLClip = m_Clip.m_ACLClip;
                     var aclCount = m_ACLClip.m_CurveCount;
-                    if (m_ACLClip.m_CurveCount != 0)
+                    if (m_ACLClip.m_CurveCount != 0 && Game.Name != "SR") // TODO SR
                     {
                         m_ACLClip.Process(out var values, out var times);
                         for (int frameIndex = 0; frameIndex < times.Length; frameIndex++)
@@ -903,7 +907,7 @@ namespace AssetStudio
                         var streamedValues = frame.keyList.Select(x => x.value).ToArray();
                         for (int curveIndex = 0; curveIndex < frame.keyList.Length;)
                         {
-                            var index = aclCount + frame.keyList[curveIndex].index;
+                            var index = (Game.Name != "SR" ? aclCount : 0) + frame.keyList[curveIndex].index;
                             ReadCurveData(iAnim, m_ClipBindingConstant, (int)index, frame.time, streamedValues, 0, ref curveIndex);
                         }
                     }
@@ -915,7 +919,7 @@ namespace AssetStudio
                         var frameOffset = frameIndex * m_DenseClip.m_CurveCount;
                         for (int curveIndex = 0; curveIndex < m_DenseClip.m_CurveCount;)
                         {
-                            var index = aclCount + streamCount + curveIndex;
+                            var index = (Game.Name != "SR" ? aclCount : 0) + streamCount + curveIndex;
                             ReadCurveData(iAnim, m_ClipBindingConstant, (int)index, time, m_DenseClip.m_SampleArray, (int)frameOffset, ref curveIndex);
                         }
                     }

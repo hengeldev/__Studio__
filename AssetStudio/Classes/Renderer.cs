@@ -38,30 +38,40 @@ namespace AssetStudio
             {
                 if (version[0] > 5 || (version[0] == 5 && version[1] >= 4)) //5.4 and up
                 {
-                    CheckHeader(reader);
+                    if (reader.Game.Name == "GI")
+                    {
+                        CheckHeader(reader);
+                    }
                     var m_Enabled = reader.ReadBoolean();
                     var m_CastShadows = reader.ReadByte();
                     var m_ReceiveShadows = reader.ReadByte();
                     if (version[0] > 2017 || (version[0] == 2017 && version[1] >= 2)) //2017.2 and up
                     {
                         var m_DynamicOccludee = reader.ReadByte();
-                        var m_ReceiveDecals = reader.ReadByte();
-                        var m_EnableShadowCulling = reader.ReadByte();
-                        var m_EnableGpuQuery = reader.ReadByte();
-                        var m_AllowHalfResolution = reader.ReadByte();
-                        var m_IsRainOccluder = reader.ReadByte();
-                        var m_IsDynamicAOOccluder = reader.ReadByte();
-                        var m_IsCloudObject = reader.ReadByte();
-                        var m_IsInteriorVolume = reader.ReadByte();
-                        var m_IsDynamic = reader.ReadByte();
-                        var m_UseTessellation = reader.ReadByte();
-                        var m_IsTerrainTessInfo = reader.ReadByte();
-                        if (isNewHeader)
+                        if (reader.Game.Name == "BH3")
                         {
-                            var m_AllowPerMaterialProp = reader.ReadByte();
-                            var m_IsHQDynamicAOOccluder = reader.ReadByte();
-                            var m_UseVertexLightInForward = reader.ReadByte();
-                            var m_CombineSubMeshInGeoPass = reader.ReadByte();
+                            var m_AllowHalfResolution = reader.ReadByte();
+                        }
+                        else if (reader.Game.Name == "GI")
+                        {
+                            var m_ReceiveDecals = reader.ReadByte();
+                            var m_EnableShadowCulling = reader.ReadByte();
+                            var m_EnableGpuQuery = reader.ReadByte();
+                            var m_AllowHalfResolution = reader.ReadByte();
+                            var m_IsRainOccluder = reader.ReadByte();
+                            var m_IsDynamicAOOccluder = reader.ReadByte();
+                            var m_IsCloudObject = reader.ReadByte();
+                            var m_IsInteriorVolume = reader.ReadByte();
+                            var m_IsDynamic = reader.ReadByte();
+                            var m_UseTessellation = reader.ReadByte();
+                            var m_IsTerrainTessInfo = reader.ReadByte();
+                            if (isNewHeader)
+                            {
+                                var m_AllowPerMaterialProp = reader.ReadByte();
+                                var m_IsHQDynamicAOOccluder = reader.ReadByte();
+                                var m_UseVertexLightInForward = reader.ReadByte();
+                                var m_CombineSubMeshInGeoPass = reader.ReadByte();
+                            }
                         }
                     }
                     if (version[0] >= 2021) //2021.1 and up
@@ -79,7 +89,10 @@ namespace AssetStudio
                     {
                         var m_RayTraceProcedural = reader.ReadByte();
                     }
-                    var m_MeshShowQuality = reader.ReadByte();
+                    if (reader.Game.Name == "GI")
+                    {
+                        var m_MeshShowQuality = reader.ReadByte();
+                    }
                     reader.AlignStream();
                 }
                 else
@@ -103,8 +116,11 @@ namespace AssetStudio
 
                 var m_LightmapIndex = reader.ReadInt16();
                 var m_LightmapIndexDynamic = reader.ReadInt16();
-                if (m_LightmapIndex != -1 || m_LightmapIndexDynamic != -1)
-                    throw new Exception("Not Supported !! skipping....");   
+                if (reader.Game.Name == "GI")
+                {
+                    if (m_LightmapIndex != -1 || m_LightmapIndexDynamic != -1)
+                        throw new Exception("Not Supported !! skipping....");
+                }
             }
 
             if (version[0] >= 3) //3.0 and up
@@ -117,8 +133,11 @@ namespace AssetStudio
                 var m_LightmapTilingOffsetDynamic = reader.ReadVector4();
             }
 
-            var m_ViewDistanceRatio = reader.ReadSingle();
-            var m_ShaderLODDistanceRatio = reader.ReadSingle();
+            if (reader.Game.Name == "GI")
+            {
+                var m_ViewDistanceRatio = reader.ReadSingle();
+                var m_ShaderLODDistanceRatio = reader.ReadSingle();
+            }
             var m_MaterialsSize = reader.ReadInt32();
             m_Materials = new PPtr<Material>[m_MaterialsSize];
             for (int i = 0; i < m_MaterialsSize; i++)
@@ -143,7 +162,10 @@ namespace AssetStudio
 
                 var m_StaticBatchRoot = new PPtr<Transform>(reader);
             }
-            var m_MatLayers = reader.ReadInt32();
+            if (reader.Game.Name == "GI")
+            {
+                var m_MatLayers = reader.ReadInt32();
+            }
 
             if (version[0] > 5 || (version[0] == 5 && version[1] >= 4)) //5.4 and up
             {
@@ -178,8 +200,11 @@ namespace AssetStudio
                 //SInt16 m_SortingLayer 5.6 and up
                 var m_SortingOrder = reader.ReadInt16();
                 reader.AlignStream();
-                var m_UseHighestMip = reader.ReadBoolean();
-                reader.AlignStream();
+                if (reader.Game.Name == "GI" || reader.Game.Name == "BH3")
+                {
+                    var m_UseHighestMip = reader.ReadBoolean();
+                    reader.AlignStream();
+                }
             }
         }
 

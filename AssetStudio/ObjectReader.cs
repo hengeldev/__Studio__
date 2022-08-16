@@ -23,6 +23,7 @@ namespace AssetStudio
         public ObjectReader(EndianBinaryReader reader, SerializedFile assetsFile, ObjectInfo objectInfo) : base(reader.BaseStream, reader.Endian)
         {
             this.assetsFile = assetsFile;
+            Game = reader.Game;
             m_PathID = objectInfo.m_PathID;
             byteStart = objectInfo.byteStart;
             byteSize = objectInfo.byteSize;
