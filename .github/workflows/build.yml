@@ -65,7 +65,7 @@ jobs:
           name: net5.0-windows
           path: AssetStudioGUI/bin/Release/net5.0-windows/publish
 
-      - name: Upload .Net6 Artifact
+      - name: Upload .Net6 CLI Artifact
         uses: actions/upload-artifact@v2
         with:
           name: net6.0-windows
