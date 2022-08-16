@@ -33,8 +33,8 @@ ________________________________________________________________________________
 How to use:
 
 ```
-1. Build BLK Map (Misc. -> Build BLKMap).
-2. Load BLK files.
+1. Build Map (Misc. -> Build Map).
+2. Load files.
 ```
 
 CLI Version:
