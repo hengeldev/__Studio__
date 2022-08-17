@@ -592,7 +592,7 @@
             this.buildCABMapToolStripMenuItem.Name = "buildCABMapToolStripMenuItem";
             this.buildCABMapToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.buildCABMapToolStripMenuItem.Text = "Build CABMap";
-            this.buildCABMapToolStripMenuItem.Click += new System.EventHandler(this.buildBLKMapToolStripMenuItem_Click);
+            this.buildCABMapToolStripMenuItem.Click += new System.EventHandler(this.buildCABMapToolStripMenuItem_Click);
             // 
             // buildAssetMapToolStripMenuItem
             // 

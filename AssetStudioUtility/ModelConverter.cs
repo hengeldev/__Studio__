@@ -184,7 +184,7 @@ namespace AssetStudio
             }
         }
 
-        private void CollectAnimationClip(Animator m_Animator, bool ignoreController = true)
+        private void CollectAnimationClip(Animator m_Animator, bool ignoreController)
         {
             if (m_Animator.m_Controller.TryGet(out var m_Controller) && !ignoreController)
             {

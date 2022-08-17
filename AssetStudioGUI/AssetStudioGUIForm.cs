@@ -2135,7 +2135,7 @@ namespace AssetStudioGUI
             logger.ShowErrorMessage = toolStripMenuItem15.Checked;
         }
 
-        private async void buildBLKMapToolStripMenuItem_Click(object sender, EventArgs e)
+        private async void buildCABMapToolStripMenuItem_Click(object sender, EventArgs e)
         {
             var openFolderDialog = new OpenFolderDialog();
             openFolderDialog.Title = $"Select {Studio.Game.Path} Folder";
