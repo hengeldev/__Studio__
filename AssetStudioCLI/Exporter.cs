@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Linq;
 using System.Text;
 using AssetStudio;
@@ -8,7 +9,6 @@ namespace AssetStudioCLI
 {
     internal static class Exporter
     {
-        public static bool RetryIfExist;
         public static bool ExportTexture2D(AssetItem item, string exportPath)
         {
             var m_Texture2D = (Texture2D)item.Asset;
@@ -288,14 +288,11 @@ namespace AssetStudioCLI
                 Directory.CreateDirectory(dir);
                 return true;
             }
-            if (RetryIfExist)
+            fullPath = Path.Combine(dir, fileName + "_" + item.m_PathID.ToString("X8") + extension);
+            if (!File.Exists(fullPath))
             {
-                fullPath = Path.Combine(dir, fileName + item.UniqueID + extension);
-                if (!File.Exists(fullPath))
-                {
-                    Directory.CreateDirectory(dir);
-                    return true;
-                }
+                Directory.CreateDirectory(dir);
+                return true;
             }
             return false;
         }

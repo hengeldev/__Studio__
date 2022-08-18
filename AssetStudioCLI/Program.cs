@@ -36,7 +36,6 @@ namespace AssetStudioCLI
 
                     Studio.Game = game;
                     assetsManager.Game = game;
-                    Exporter.RetryIfExist = o.Override;
                     assetsManager.ResolveDependancies = false;
                     AssetBundle.Exportable = !o.ExcludeAssetBundle;
                     IndexObject.Exportable = !o.ExcludeIndexObject;
@@ -108,8 +107,6 @@ namespace AssetStudioCLI
         public string GameName { get; set; }
         [Option('m', "map", HelpText = "Build CABMap/AssetMap.")]
         public bool Map { get; set; }
-        [Option('o', "override", HelpText = "Export assets even if name already exist.")]
-        public bool Override { get; set; }
         [Option('a', "noassetbundle", HelpText = "Exclude AssetBundle from AssetMap/Export")]
         public bool ExcludeAssetBundle { get; set; }
         [Option('i', "noindexobject", HelpText = "Exclude IndexObject/MiHoYoBinData from AssetMap/Export")]
