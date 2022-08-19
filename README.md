@@ -1,9 +1,3 @@
-# Future of the Project
-
-Thank you all for your opinions and feedback, according to the majority, option 1 will be implemented.
-
-![image](https://user-images.githubusercontent.com/32140579/184701764-c4a0ac49-053b-44f9-8e04-587808b6e355.png)
-_____________________________________________________________________________________________________________________________
 # HoYoStudio
 Check out the [original AssetStudio project](https://github.com/Perfare/AssetStudio) for more information.
 
@@ -75,7 +69,7 @@ NOTES:
 - in case of need to export models/animators without fetching all animations, make sure to enable "Ignore Controller Anim" option in "Options -> Export Options" before loading assets.
 ```
 
-Looking forward for feedback for issues/bugs to fix and update.
+Looking forward for feedback for issues/bugs in ![Discussions](https://github.com/Razmoth/HoYoStudio/discussions) to fix and update.
 _____________________________________________________________________________________________________________________________
 Special Thank to:
 - Perfare: Original author.
