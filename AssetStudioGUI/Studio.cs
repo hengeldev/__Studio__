@@ -359,10 +359,7 @@ namespace AssetStudioGUI
                                             }
                                         }
                                     }
-                                    else
-                                    {
-                                        containers.Add((m_AssetBundle.PreloadTable[k], m_Container.Key));
-                                    }
+                                    containers.Add((m_AssetBundle.PreloadTable[k], m_Container.Key));
                                 }
                             }
                             assetItem.Text = m_AssetBundle.m_Name;

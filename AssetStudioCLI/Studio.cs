@@ -357,14 +357,17 @@ namespace AssetStudioCLI
                                 var preloadEnd = preloadIndex + preloadSize;
                                 for (int k = preloadIndex; k < preloadEnd; k++)
                                 {
-                                    if (long.TryParse(m_Container.Key, out var containerValue))
+                                    if (Game.Name == "GI")
                                     {
-                                        var last = unchecked((uint)containerValue);
-                                        var path = ResourceIndex.GetBundlePath(last);
-                                        if (!string.IsNullOrEmpty(path))
+                                        if (long.TryParse(m_Container.Key, out var containerValue))
                                         {
-                                            containers.Add((m_AssetBundle.PreloadTable[k], path));
-                                            continue;
+                                            var last = unchecked((uint)containerValue);
+                                            var path = ResourceIndex.GetBundlePath(last);
+                                            if (!string.IsNullOrEmpty(path))
+                                            {
+                                                containers.Add((m_AssetBundle.PreloadTable[k], path));
+                                                continue;
+                                            }
                                         }
                                     }
                                     containers.Add((m_AssetBundle.PreloadTable[k], m_Container.Key));

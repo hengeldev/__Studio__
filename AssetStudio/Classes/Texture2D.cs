@@ -8,7 +8,6 @@ namespace AssetStudio
         public long offset; //ulong
         public uint size;
         public string path;
-        public string asb;
 
         public StreamingInfo(ObjectReader reader)
         {
@@ -24,7 +23,6 @@ namespace AssetStudio
             }
             size = reader.ReadUInt32();
             path = reader.ReadAlignedString();
-            //asb = reader.ReadAlignedString();
         }
     }
 
