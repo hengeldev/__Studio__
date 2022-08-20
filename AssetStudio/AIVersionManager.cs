@@ -27,12 +27,10 @@ namespace AssetStudio
         private static readonly string VersionIndexUrl = Path.Combine(BaseUrl, "version-index.json");
         private static readonly HttpClient Client;
 
-        private static bool Online;
         private static List<VersionIndex> Versions;
         
         static AIVersionManager()
         {
-            Online = false;
             Client = new HttpClient();
             Client.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (compatible; MSIE 6.0; Windows 98; Trident/5.1)");
             Client.Timeout = TimeSpan.FromMinutes(10);
@@ -50,8 +48,6 @@ namespace AssetStudio
                 return;
             }
             Versions = JsonConvert.DeserializeObject<List<VersionIndex>>(versions);
-            if (Versions.Count > 0) 
-                Online = true;
         }
 
         public static async Task<string> DownloadString(string url)
@@ -153,7 +149,6 @@ namespace AssetStudio
 
         public static string GetAIPath(string version)
         {
-            if (!Online) return "";
             var versionIndex = Versions.FirstOrDefault(x => x.Version == version);
             return Path.Combine(BaseAIFolder, Path.GetFileName(versionIndex.MappedPath));
         }
@@ -178,7 +173,6 @@ namespace AssetStudio
         public static string[] GetVersions()
         {
             FetchVersions();
-            if (!Online) return new string[0];
             return Versions.Select(x => x.Version).ToArray();
         }
     }
