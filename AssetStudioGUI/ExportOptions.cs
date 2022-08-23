@@ -26,6 +26,7 @@ namespace AssetStudioGUI
             exportAssetBundle.Checked = Properties.Settings.Default.exportAssetBundle;
             exportIndexObject.Checked = Properties.Settings.Default.exportIndexObject;
             disableRndrr.Checked = Properties.Settings.Default.disableRndrr;
+            disableShader.Checked = Properties.Settings.Default.disableShader;
             key.Value = Properties.Settings.Default.key;
             enableXor.Checked = Properties.Settings.Default.enableXor;
             ignoreController.Checked = Properties.Settings.Default.ignoreController;
@@ -64,6 +65,8 @@ namespace AssetStudioGUI
             IndexObject.Exportable = Properties.Settings.Default.exportAssetBundle;
             Properties.Settings.Default.disableRndrr = disableRndrr.Checked;
             Renderer.Parsable = !Properties.Settings.Default.disableRndrr;
+            Properties.Settings.Default.disableShader = disableShader.Checked;
+            Shader.Parsable = !Properties.Settings.Default.disableShader;
             Properties.Settings.Default.key = (byte)key.Value;
             Properties.Settings.Default.enableXor = enableXor.Checked;
             MiHoYoBinData.Key = (byte)key.Value;

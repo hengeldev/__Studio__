@@ -224,6 +224,21 @@ namespace AssetStudioGUI.Properties
 
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool disableShader
+        {
+            get
+            {
+                return ((bool)(this["disableShader"]));
+            }
+            set
+            {
+                this["disableShader"] = value;
+            }
+        }
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("147")]
         public byte key
         {

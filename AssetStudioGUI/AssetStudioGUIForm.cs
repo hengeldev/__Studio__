@@ -109,6 +109,7 @@ namespace AssetStudioGUI
             AssetBundle.Exportable = Properties.Settings.Default.exportAssetBundle;
             IndexObject.Exportable = Properties.Settings.Default.exportIndexObject;
             Renderer.Parsable = !Properties.Settings.Default.disableRndrr;
+            Shader.Parsable = !Properties.Settings.Default.disableShader;
             MiHoYoBinData.doXOR = Properties.Settings.Default.enableXor;
             MiHoYoBinData.Key = Properties.Settings.Default.key;
             ConsoleHelper.AllocConsole();
