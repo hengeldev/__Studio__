@@ -21,7 +21,6 @@ Some features are:
 - Container/filename recovery for Assets.
 - Build Asset List of assets inside game files.
 - Build CABMap/AssetMap through CLI.
-- Integrated CLI Into the main executable, allowing for GUI/CLI while having a single exe.
 ```
 _____________________________________________________________________________________________________________________________
 How to use:
