@@ -1,5 +1,10 @@
 # HoYoStudio
 Check out the [original AssetStudio project](https://github.com/Perfare/AssetStudio) for more information.
+_____________________________________________________________________________________________________________________________
+New Discord Server: 
+
+Join ![here](https://discord.gg/WUDufMSt) for more discussions, questions and suggestions/feedback.
+_____________________________________________________________________________________________________________________________
 
 This is the release of `HoYoStudio`, Modded AssetStudio that should work on:
 ```
@@ -19,8 +24,9 @@ Some features are:
 - Exportable Assets (not all of them) with XOR/JSON support for "MiHoYoBinData"
 - Togglable debug console.
 - Container/filename recovery for Assets.
-- Build Asset List of assets inside game files.
-- Build CABMap/AssetMap through CLI.
+- Build AssetMap, An asset list of assets inside game files.
+- Build CABMap/AssetMap through CLI (with supported `Unity Type` and `Regex` filters).
+- Export assets through CLI (with supported `Unity Type` and `Regex` filters and grouping).
 ```
 _____________________________________________________________________________________________________________________________
 How to use:
@@ -32,7 +38,7 @@ How to use:
 
 CLI Version:
 ```
-AssetStudioCLI 0.16.60
+AssetStudioCLI 0.16.65
 Copyright (C) 2022 AssetStudioCLI
 
   -v, --verbose           Show log messages.
@@ -45,7 +51,18 @@ Copyright (C) 2022 AssetStudioCLI
 
   -m, --map               Build CABMap/AssetMap.
 
-  -o, --override          Export assets even if name already exist.
+  -x, --amtype            (Default: XML) AssetMap output type
+
+                          Options:
+                          XML
+                          JSON
+
+  -p, --group             (Default: 0) Specify how exported assets should be grouped.
+
+                          Options:
+                          0 (type name)
+                          1 (container path)
+                          2 (Source file name)
 
   -a, --noassetbundle     Exclude AssetBundle from AssetMap/Export
 

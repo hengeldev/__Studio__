@@ -68,8 +68,8 @@ namespace AssetStudioCLI
 
                     if (o.Map)
                     {
-                        var assets = BuildAssetMap(files.ToList(), true);
-                        ExportAssetsMap(outputPath, assets, ExportListType.XML);
+                        var assets = BuildAssetMap(files.ToList(), types, filtes, true);
+                        ExportAssetsMap(outputPath, assets, o.AssetMapType);
                         exportableAssets.Clear();
                         assetsManager.Clear();
                     }
@@ -79,7 +79,7 @@ namespace AssetStudioCLI
                         {
                             assetsManager.LoadFiles(file);
                             BuildAssetData(types, filtes);
-                            ExportAssets(outputPath, exportableAssets);
+                            ExportAssets(outputPath, exportableAssets, o.AssetGroupOption);
                             exportableAssets.Clear();
                             assetsManager.Clear();
                         }
@@ -107,6 +107,10 @@ namespace AssetStudioCLI
         public string GameName { get; set; }
         [Option('m', "map", HelpText = "Build CABMap/AssetMap.")]
         public bool Map { get; set; }
+        [Option('x', "amtype", HelpText = "AssetMap output type\n\nOptions:\nXML\nJSON", Default = ExportListType.XML)]
+        public ExportListType AssetMapType { get; set; }
+        [Option('p', "group", HelpText = "Specify how exported assets should be grouped.\n\nOptions:\n0 (type name)\n1 (container path)\n2 (Source file name)", Default = 0)]
+        public int AssetGroupOption { get; set; }
         [Option('a', "noassetbundle", HelpText = "Exclude AssetBundle from AssetMap/Export")]
         public bool ExcludeAssetBundle { get; set; }
         [Option('i', "noindexobject", HelpText = "Exclude IndexObject/MiHoYoBinData from AssetMap/Export")]

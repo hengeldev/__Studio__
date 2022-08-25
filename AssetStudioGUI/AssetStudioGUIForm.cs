@@ -781,6 +781,10 @@ namespace AssetStudioGUI
                     case Sprite m_Sprite:
                         PreviewSprite(assetItem, m_Sprite);
                         break;
+                    case Material m_Material:
+                        PreviewMaterial(m_Material);
+                        StatusStripUpdate("Can be exported to JSON file.");
+                        break;
                     case Animator _:
                         StatusStripUpdate("Can be exported to FBX file.");
                         break;
@@ -1035,6 +1039,7 @@ namespace AssetStudioGUI
             var str = JsonConvert.SerializeObject(m_AssetBundle, Formatting.Indented);
             PreviewText(str);
         }
+
         private void PreviewIndexObject(IndexObject m_IndexObject)
         {
             var str = JsonConvert.SerializeObject(m_IndexObject, Formatting.Indented);
@@ -1259,6 +1264,12 @@ namespace AssetStudioGUI
             {
                 StatusStripUpdate("Unsupported sprite for preview.");
             }
+        }
+
+        private void PreviewMaterial(Material m_Material)
+        {
+            var str = JsonConvert.SerializeObject(m_Material, Formatting.Indented);
+            PreviewText(str);
         }
 
         private void PreviewTexture(DirectBitmap bitmap)
