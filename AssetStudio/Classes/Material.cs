@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using Newtonsoft.Json;
+using System.Collections.Generic;
 
 namespace AssetStudio
 {
@@ -60,10 +61,14 @@ namespace AssetStudio
         }
     }
 
+    [JsonObject(MemberSerialization.OptIn)]
     public sealed class Material : NamedObject
     {
+        [JsonProperty]
         public PPtr<Shader> m_Shader;
+        [JsonProperty]
         public UnityPropertySheet m_SavedProperties;
+        [JsonProperty]
         public KeyValuePair<string, string>[] m_StringTagMap;
 
         public Material(ObjectReader reader) : base(reader)

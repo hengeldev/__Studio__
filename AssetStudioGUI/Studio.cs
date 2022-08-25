@@ -314,6 +314,7 @@ namespace AssetStudioGUI
                         case Font _:
                         case MovieTexture _:
                         case Sprite _:
+                        case Material _:
                             assetItem.Text = ((NamedObject)asset).m_Name;
                             exportable = true;
                             break;

@@ -21,6 +21,7 @@ namespace AssetStudio
         {
             var typeID = (ClassIDType)classID;
             return typeID == ClassIDType.GameObject
+                || typeID == ClassIDType.Material
                 || typeID == ClassIDType.Texture2D
                 || typeID == ClassIDType.Mesh
                 || typeID == ClassIDType.Shader

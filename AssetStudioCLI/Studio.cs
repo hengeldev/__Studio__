@@ -6,12 +6,15 @@ using System.Xml.Linq;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using static AssetStudioCLI.Exporter;
+using Newtonsoft.Json.Converters;
+using Newtonsoft.Json;
 
 namespace AssetStudioCLI
 {
     public enum ExportListType
     {
-        XML
+        XML,
+        JSON
     }
 
     internal static class Studio
@@ -131,7 +134,7 @@ namespace AssetStudioCLI
             return extractedCount;
         }
 
-        public static List<AssetEntry> BuildAssetMap(List<string> files, bool buildCABMap = false)
+        public static List<AssetEntry> BuildAssetMap(List<string> files, ClassIDType[] formats, Regex[] filters, bool buildCABMap = false)
         {
             List<AssetEntry> assets = new List<AssetEntry>();
             Dictionary<long, string> NameLUT = new Dictionary<long, string>();
@@ -191,6 +194,7 @@ namespace AssetStudioCLI
                                                 {
                                                     NameLUT.Add(objectReader.m_PathID, gameObject.m_Name);
                                                 }
+                                                asset.Name = "";
                                                 exportable = false;
                                                 break;
                                             case ClassIDType.Shader:
@@ -221,7 +225,9 @@ namespace AssetStudioCLI
                                                 asset.Name = objectReader.ReadAlignedString();
                                                 break;
                                         }
-                                        if (exportable)
+                                        var isMatchRegex = filters.Length == 0 || filters.Any(x => x.IsMatch(asset.Name) || asset.Type == ClassIDType.Animator);
+                                        var isFilteredType = formats.Length == 0 || formats.Contains(asset.Type) || asset.Type == ClassIDType.Animator;
+                                        if (isMatchRegex && isFilteredType && exportable)
                                         {
                                             assets.Add(asset);
                                         }
@@ -263,10 +269,11 @@ namespace AssetStudioCLI
             }
 
             Logger.Info("Processing PPtr names");
-            foreach (var pptr in PPtrLUT)
+            for(int i = PPtrLUT.Count - 1; i >= 0; i--)
             {
+                var pptr = PPtrLUT[i];
                 var asset = assets[pptr.Item1];
-                if (NameLUT.TryGetValue(pptr.Item2, out var name))
+                if (NameLUT.TryGetValue(pptr.Item2, out var name) && (filters.Length == 0 || filters.Any(x => x.IsMatch(name))) && (formats.Length == 0 || formats.Contains(asset.Type)))
                 {
                     asset.Name = name;
                 }
@@ -327,6 +334,7 @@ namespace AssetStudioCLI
                         case Font _:
                         case MovieTexture _:
                         case Sprite _:
+                        case Material _:
                             assetItem.Text = ((NamedObject)asset).m_Name;
                             exportable = true;
                             break;
@@ -424,8 +432,8 @@ namespace AssetStudioCLI
                     {
                         assetItem.Text = assetItem.TypeString + assetItem.UniqueID;
                     }
-                    var isMatchRegex = filters.Length > 0 ? filters.Any(x => x.IsMatch(assetItem.Text)) : true;
-                    var isFilteredType = formats.Length > 0 ? formats.Contains(assetItem.Asset.type) : true;
+                    var isMatchRegex = filters.Length == 0 || filters.Any(x => x.IsMatch(assetItem.Text));
+                    var isFilteredType = formats.Length == 0 || formats.Contains(assetItem.Asset.type);
                     if (isMatchRegex && isFilteredType && exportable)
                     {
                         exportableAssets.Add(assetItem);
@@ -442,14 +450,50 @@ namespace AssetStudioCLI
             containers.Clear();
         }
 
-        public static void ExportAssets(string savePath, List<AssetItem> toExportAssets)
+        public static void ExportAssets(string savePath, List<AssetItem> toExportAssets, int assetGroupOption)
         {
             int toExportCount = toExportAssets.Count;
             int exportedCount = 0;
             foreach (var asset in toExportAssets)
             {
                 string exportPath;
+                switch (assetGroupOption)
+                {
+                    case 0: //type name
                 exportPath = Path.Combine(savePath, asset.TypeString);
+                        break;
+                    case 1: //container path
+                        if (!string.IsNullOrEmpty(asset.Container))
+                        {
+                            if (int.TryParse(asset.Container, out _))
+                            {
+                                exportPath = Path.Combine(savePath, asset.Container);
+                            }
+                            else
+                            {
+                                exportPath = Path.Combine(savePath, Path.GetDirectoryName(asset.Container));
+                            }
+
+                        }
+                        else
+                        {
+                            exportPath = Path.Combine(savePath, asset.TypeString);
+                        }
+                        break;
+                    case 2: //source file
+                        if (string.IsNullOrEmpty(asset.SourceFile.originalPath))
+                        {
+                            exportPath = Path.Combine(savePath, asset.SourceFile.fileName + "_export");
+                        }
+                        else
+                        {
+                            exportPath = Path.Combine(savePath, Path.GetFileName(asset.SourceFile.originalPath) + "_export", asset.SourceFile.fileName);
+                        }
+                        break;
+                    default:
+                        exportPath = savePath;
+                        break;
+                }
                 exportPath += Path.DirectorySeparatorChar;
                 Logger.Info($"[{exportedCount}/{toExportCount}] Exporting {asset.TypeString}: {asset.Text}");
                 try
@@ -497,6 +541,15 @@ namespace AssetStudioCLI
                         )
                     );
                     doc.Save(filename);
+                    break;
+                case ExportListType.JSON:
+                    filename = Path.Combine(savePath, "assets_map.json");
+                    using (StreamWriter file = File.CreateText(filename))
+                    {
+                        JsonSerializer serializer = new JsonSerializer() { Formatting = Formatting.Indented };
+                        serializer.Converters.Add(new StringEnumConverter());
+                        serializer.Serialize(file, toExportAssets);
+                    }
                     break;
             }
 
