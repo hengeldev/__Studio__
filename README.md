@@ -3,7 +3,7 @@ Check out the [original AssetStudio project](https://github.com/Perfare/AssetStu
 _____________________________________________________________________________________________________________________________
 New Discord Server: 
 
-Join ![here](https://discord.gg/WUDufMSt) for more discussions, questions and suggestions/feedback.
+Join [here](https://discord.gg/WUDufMSt) for more discussions, questions and suggestions/feedback.
 _____________________________________________________________________________________________________________________________
 
 This is the release of `HoYoStudio`, Modded AssetStudio that should work on:
