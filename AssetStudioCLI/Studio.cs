@@ -279,7 +279,6 @@ namespace AssetStudioCLI
                 }
                 else
                 {
-                    Logger.Warning($"No name found for pathID {pptr.Item2}, removing...");
                     assets.Remove(asset);
                 }
             }
