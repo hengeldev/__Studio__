@@ -3,7 +3,7 @@ Check out the [original AssetStudio project](https://github.com/Perfare/AssetStu
 _____________________________________________________________________________________________________________________________
 New Discord Server: 
 
-Join [here](https://discord.gg/WUDufMSt) for more discussions, questions and suggestions/feedback.
+Join [here](https://discord.gg/WUDufMSt) for more discussions, questions, suggestions and feedback.
 _____________________________________________________________________________________________________________________________
 
 This is the release of `HoYoStudio`, Modded AssetStudio that should work on:
@@ -35,7 +35,7 @@ How to use:
 1. Build Map (Misc. -> Build Map).
 2. Load files.
 ```
-
+_____________________________________________________________________________________________________________________________
 CLI Version:
 ```
 AssetStudioCLI 0.16.65
