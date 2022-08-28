@@ -69,6 +69,11 @@ namespace AssetStudioCLI
                     if (o.Map)
                     {
                         var assets = BuildAssetMap(files.ToList(), types, filtes, true);
+                        var dirInfo = new DirectoryInfo(outputPath);
+                        if (!dirInfo.Exists)
+                        {
+                            dirInfo.Create();
+                        }
                         ExportAssetsMap(outputPath, assets, o.AssetMapType);
                         exportableAssets.Clear();
                         assetsManager.Clear();
