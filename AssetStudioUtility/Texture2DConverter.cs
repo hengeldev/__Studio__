@@ -57,6 +57,7 @@ namespace AssetStudio
                     flag = DecodeRGB565(buff, bytes);
                     break;
                 case TextureFormat.R16: //test pass
+                case TextureFormat.R16_2: //test pass
                     flag = DecodeR16(buff, bytes);
                     break;
                 case TextureFormat.DXT1: //test pass

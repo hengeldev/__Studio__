@@ -204,6 +204,7 @@ namespace AssetStudio
         R8,
         ETC_RGB4Crunched,
         ETC2_RGBA8Crunched,
+        R16_2,
         ASTC_HDR_4x4,
         ASTC_HDR_5x5,
         ASTC_HDR_6x6,
