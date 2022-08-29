@@ -33,7 +33,7 @@ namespace AssetStudio
         {
             Client = new HttpClient();
             Client.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (compatible; MSIE 6.0; Windows 98; Trident/5.1)");
-            Client.Timeout = TimeSpan.FromSeconds(3);
+            Client.Timeout = TimeSpan.FromMinutes(1);
             Versions = new List<VersionIndex>();
         }
 
