@@ -38,37 +38,45 @@ How to use:
 _____________________________________________________________________________________________________________________________
 CLI Version:
 ```
-AssetStudioCLI 0.16.65
+AssetStudioCLI 0.16.66
 Copyright (C) 2022 AssetStudioCLI
 
   -v, --verbose           Show log messages.
 
-  -t, --type              Specify unity type(s).
+  -t, --type              Specify unity class type(s). (e.g: Texture2D, Sprite)
 
   -f, --filter            Specify regex filter(s).
 
   -g, --game              Required. Specify Game.
 
-  -m, --map               Build CABMap/AssetMap.
+  -m, --map               (Default: None) Specify which map to build.
 
-  -x, --amtype            (Default: XML) AssetMap output type
+                          Options:
+                          None
+                          AssetMap
+                          CABMap
+                          Both
+
+  -M, --maptype           (Default: XML) AssetMap output type.
 
                           Options:
                           XML
                           JSON
 
-  -p, --group             (Default: 0) Specify how exported assets should be grouped.
+  -n, --mapName           (Default: assets_map) Specify AssetMap file name.
+
+  -G, --group             (Default: 0) Specify how exported assets should be grouped.
 
                           Options:
                           0 (type name)
                           1 (container path)
                           2 (Source file name)
 
-  -a, --noassetbundle     Exclude AssetBundle from AssetMap/Export
+  -a, --noassetbundle     Exclude AssetBundle from AssetMap/Export.
 
-  -i, --noindexobject     Exclude IndexObject/MiHoYoBinData from AssetMap/Export
+  -i, --noindexobject     Exclude IndexObject/MiHoYoBinData from AssetMap/Export.
 
-  -k, --xorkey            XOR key to decrypt MiHoYoBinData
+  -k, --xorkey            XOR key to decrypt MiHoYoBinData.
 
   --help                  Display this help screen.
 
