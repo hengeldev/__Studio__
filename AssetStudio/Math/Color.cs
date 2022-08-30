@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Runtime.InteropServices;
 
 namespace AssetStudio
@@ -6,9 +7,13 @@ namespace AssetStudio
     [StructLayout(LayoutKind.Sequential, Pack = 4)]
     public struct Color : IEquatable<Color>
     {
+        [JsonProperty(PropertyName = "r")]
         public float R;
+        [JsonProperty(PropertyName = "g")]
         public float G;
+        [JsonProperty(PropertyName = "b")]
         public float B;
+        [JsonProperty(PropertyName = "a")]
         public float A;
 
         public Color(float r, float g, float b, float a)

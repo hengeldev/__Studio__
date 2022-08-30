@@ -61,24 +61,14 @@ namespace AssetStudioCLI
 
                     var inputPath = o.Input;
                     var outputPath = o.Output;
-                    var types = o.Type.ToArray();
-                    var filtes = o.Filter.ToArray();
+                    var types = o.Types.ToArray();
+                    var filtes = o.Filters.ToArray();
 
-                    var files = Directory.Exists(inputPath) ? Directory.GetFiles(inputPath, $"*{game.Extension}", SearchOption.AllDirectories) : new string[] { inputPath };
+                    Logger.Info("Scanning for files");
+                    var files = Directory.Exists(inputPath) ? Directory.GetFiles(inputPath, $"*{game.Extension}", SearchOption.AllDirectories).OrderBy(x => x.Length).ToArray() : new string[] { inputPath };
+                    Logger.Info(string.Format("Found {0} file(s)", files.Count()));
 
-                    if (o.Map)
-                    {
-                        var assets = BuildAssetMap(files.ToList(), types, filtes, true);
-                        var dirInfo = new DirectoryInfo(outputPath);
-                        if (!dirInfo.Exists)
-                        {
-                            dirInfo.Create();
-                        }
-                        ExportAssetsMap(outputPath, assets, o.AssetMapType);
-                        exportableAssets.Clear();
-                        assetsManager.Clear();
-                    }
-                    else
+                    if (o.Map.Equals(MapOpType.None))
                     {
                         foreach (var file in files)
                         {
@@ -88,6 +78,24 @@ namespace AssetStudioCLI
                             exportableAssets.Clear();
                             assetsManager.Clear();
                         }
+                    }
+                    if (o.Map.HasFlag(MapOpType.CABMap))
+                    {
+                        CABManager.BuildMap(files.ToList(), game);
+                    }
+                    if (o.Map.HasFlag(MapOpType.AssetMap))
+                    {
+                        if (files.Length == 1)
+                        {
+                            throw new Exception("Unable to build AssetMap with input_path as a file !!");
+                        }
+                        var assets = BuildAssetMap(files.ToList(), types, filtes);
+                        var dirInfo = new DirectoryInfo(outputPath);
+                        if (!dirInfo.Exists)
+                        {
+                            dirInfo.Create();
+                        }
+                        ExportAssetsMap(outputPath, assets, o.AssetMapName, o.AssetMapType);
                     }
                 }
                 catch (Exception e)
@@ -104,23 +112,25 @@ namespace AssetStudioCLI
     {
         [Option('v', "verbose", HelpText = "Show log messages.")]
         public bool Verbose { get; set; }
-        [Option('t', "type", HelpText = "Specify unity type(s).")]
-        public IEnumerable<ClassIDType> Type { get; set; }
+        [Option('t', "type", HelpText = "Specify unity class type(s). (e.g: Texture2D, Sprite)")]
+        public IEnumerable<ClassIDType> Types { get; set; }
         [Option('f', "filter", HelpText = "Specify regex filter(s).")]
-        public IEnumerable<Regex> Filter { get; set; }
+        public IEnumerable<Regex> Filters { get; set; }
         [Option('g', "game", Required = true, HelpText = "Specify Game.")]
         public string GameName { get; set; }
-        [Option('m', "map", HelpText = "Build CABMap/AssetMap.")]
-        public bool Map { get; set; }
-        [Option('x', "amtype", HelpText = "AssetMap output type\n\nOptions:\nXML\nJSON", Default = ExportListType.XML)]
+        [Option('m', "map", HelpText = "Specify which map to build.\n\nOptions:\nNone\nAssetMap\nCABMap\nBoth", Default = MapOpType.None)]
+        public MapOpType Map { get; set; }
+        [Option('M', "maptype", HelpText = "AssetMap output type.\n\nOptions:\nXML\nJSON", Default = ExportListType.XML)]
         public ExportListType AssetMapType { get; set; }
-        [Option('p', "group", HelpText = "Specify how exported assets should be grouped.\n\nOptions:\n0 (type name)\n1 (container path)\n2 (Source file name)", Default = 0)]
+        [Option('n', "mapName", HelpText = "Specify AssetMap file name.", Default = "assets_map")]
+        public string AssetMapName { get; set; }
+        [Option('G', "group", HelpText = "Specify how exported assets should be grouped.\n\nOptions:\n0 (type name)\n1 (container path)\n2 (Source file name)", Default = 0)]
         public int AssetGroupOption { get; set; }
-        [Option('a', "noassetbundle", HelpText = "Exclude AssetBundle from AssetMap/Export")]
+        [Option('a', "noassetbundle", HelpText = "Exclude AssetBundle from AssetMap/Export.")]
         public bool ExcludeAssetBundle { get; set; }
-        [Option('i', "noindexobject", HelpText = "Exclude IndexObject/MiHoYoBinData from AssetMap/Export")]
+        [Option('i', "noindexobject", HelpText = "Exclude IndexObject/MiHoYoBinData from AssetMap/Export.")]
         public bool ExcludeIndexObject { get; set; }
-        [Option('k', "xorkey", HelpText = "XOR key to decrypt MiHoYoBinData")]
+        [Option('k', "xorkey", HelpText = "XOR key to decrypt MiHoYoBinData.")]
         public byte XORKey { get; set; }
         [Value(0, Required = true, MetaName = "input_path", HelpText = "Input file/folder.")]
         public string Input { get; set; }

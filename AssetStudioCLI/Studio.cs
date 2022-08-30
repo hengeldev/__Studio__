@@ -11,6 +11,14 @@ using Newtonsoft.Json;
 
 namespace AssetStudioCLI
 {
+    [Flags]
+    public enum MapOpType
+    {
+        None,
+        AssetMap,
+        CABMap,
+        Both
+    }
     public enum ExportListType
     {
         XML,
@@ -134,19 +142,11 @@ namespace AssetStudioCLI
             return extractedCount;
         }
 
-        public static List<AssetEntry> BuildAssetMap(List<string> files, ClassIDType[] formats, Regex[] filters, bool buildCABMap = false)
+        public static List<AssetEntry> BuildAssetMap(List<string> files, ClassIDType[] formats, Regex[] filters)
         {
             List<AssetEntry> assets = new List<AssetEntry>();
             Dictionary<long, string> NameLUT = new Dictionary<long, string>();
             List<(int, long)> PPtrLUT = new List<(int, long)>();
-            int collisions = 0;
-
-            if (buildCABMap)
-            {
-                Logger.Info(string.Format("Building {0}", Game.MapName));
-                CABManager.CABMap.Clear();
-            }
-
             for (int i = 0; i < files.Count; i++)
             {
                 var file = files[i];
@@ -163,16 +163,6 @@ namespace AssetStudioCLI
                                 if (cabReader.FileType == FileType.AssetsFile)
                                 {
                                     var assetsFile = new SerializedFile(cabReader, null);
-                                    if (buildCABMap)
-                                    {
-                                        if (CABManager.CABMap.ContainsKey(cab.path))
-                                        {
-                                            collisions++;
-                                            continue;
-                                        }
-                                        var dependencies = assetsFile.m_Externals.Select(x => x.fileName).ToList();
-                                        CABManager.CABMap.Add(cab.path, new Entry(file, bundle.Key, dependencies));
-                                    }
                                     var objects = assetsFile.m_Objects.Where(x => x.HasExportableType()).ToArray();
                                     IndexObject indexObject = null;
                                     foreach (var obj in objects)
@@ -194,7 +184,6 @@ namespace AssetStudioCLI
                                                 {
                                                     NameLUT.Add(objectReader.m_PathID, gameObject.m_Name);
                                                 }
-                                                asset.Name = "";
                                                 exportable = false;
                                                 break;
                                             case ClassIDType.Shader:
@@ -216,10 +205,12 @@ namespace AssetStudioCLI
                                                     var path = ResourceIndex.GetContainerFromBinName(reader.FileName, binName);
                                                     asset.Name = !string.IsNullOrEmpty(path) ? Path.GetFileName(path) : binName;
                                                 }
+                                                exportable = IndexObject.Exportable;
                                                 break;
                                             case ClassIDType.IndexObject:
                                                 indexObject = new IndexObject(objectReader);
                                                 asset.Name = "IndexObject";
+                                                exportable = IndexObject.Exportable;
                                                 break;
                                             default:
                                                 asset.Name = objectReader.ReadAlignedString();
@@ -239,41 +230,17 @@ namespace AssetStudioCLI
                 }
 
                 Logger.Info($"[{i + 1}/{files.Count}] Processed {Path.GetFileName(file)}");
-            }
-
-            if (buildCABMap)
-            {
-                CABManager.CABMap = CABManager.CABMap.OrderBy(pair => pair.Key).ToDictionary(pair => pair.Key, pair => pair.Value);
-                var outputFile = new FileInfo($"Maps/{Game.MapName}.bin");
-
-                if (!outputFile.Directory.Exists)
-                    outputFile.Directory.Create();
-
-                using (var binaryFile = outputFile.Create())
-                using (var writer = new BinaryWriter(binaryFile))
-                {
-                    writer.Write(CABManager.CABMap.Count);
-                    foreach (var cab in CABManager.CABMap)
-                    {
-                        writer.Write(cab.Key);
-                        writer.Write(cab.Value.Path);
-                        writer.Write(cab.Value.Offset);
-                        writer.Write(cab.Value.Dependencies.Count);
-                        foreach (var dependancy in cab.Value.Dependencies)
-                        {
-                            writer.Write(dependancy);
-                        }
-                    }
-                }
-                Logger.Info($"{Game.MapName} build successfully, {collisions} collisions found !!");
+                Progress.Report(i + 1, files.Count);
             }
 
             Logger.Info("Processing PPtr names");
-            for(int i = PPtrLUT.Count - 1; i >= 0; i--)
+            for (int i = PPtrLUT.Count - 1; i >= 0; i--)
             {
                 var pptr = PPtrLUT[i];
                 var asset = assets[pptr.Item1];
-                if (NameLUT.TryGetValue(pptr.Item2, out var name) && (filters.Length == 0 || filters.Any(x => x.IsMatch(name))) && (formats.Length == 0 || formats.Contains(asset.Type)))
+                if (NameLUT.TryGetValue(pptr.Item2, out var name) 
+                    && (filters.Length == 0 || filters.Any(x => x.IsMatch(name))) 
+                    && (formats.Length == 0 || formats.Contains(asset.Type)))
                 {
                     asset.Name = name;
                 }
@@ -459,7 +426,7 @@ namespace AssetStudioCLI
                 switch (assetGroupOption)
                 {
                     case 0: //type name
-                exportPath = Path.Combine(savePath, asset.TypeString);
+                        exportPath = Path.Combine(savePath, asset.TypeString);
                         break;
                     case 1: //container path
                         if (!string.IsNullOrEmpty(asset.Container))
@@ -518,13 +485,13 @@ namespace AssetStudioCLI
             Logger.Info(statusText);
         }
 
-        public static void ExportAssetsMap(string savePath, List<AssetEntry> toExportAssets, ExportListType exportListType)
+        public static void ExportAssetsMap(string savePath, List<AssetEntry> toExportAssets, string exportListName, ExportListType exportListType)
         {
             string filename;
             switch (exportListType)
             {
                 case ExportListType.XML:
-                    filename = Path.Combine(savePath, "assets_map.xml");
+                    filename = Path.Combine(savePath, $"{exportListName}.xml");
                     var doc = new XDocument(
                         new XElement("Assets",
                             new XAttribute("filename", filename),
@@ -542,7 +509,7 @@ namespace AssetStudioCLI
                     doc.Save(filename);
                     break;
                 case ExportListType.JSON:
-                    filename = Path.Combine(savePath, "assets_map.json");
+                    filename = Path.Combine(savePath, $"{exportListName}.json");
                     using (StreamWriter file = File.CreateText(filename))
                     {
                         JsonSerializer serializer = new JsonSerializer() { Formatting = Formatting.Indented };

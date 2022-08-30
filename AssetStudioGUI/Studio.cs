@@ -656,7 +656,7 @@ namespace AssetStudioGUI
                 switch (exportListType)
                 {
                     case ExportListType.XML:
-                        filename = Path.Combine(savePath, "assets_map.xml");
+                        filename = Path.Combine(savePath, $"assets_map_{Game.Name}.xml");
                         var doc = new XDocument(
                             new XElement("Assets",
                                 new XAttribute("filename", filename),
