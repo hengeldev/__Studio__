@@ -184,6 +184,7 @@ namespace AssetStudioCLI
                                                 {
                                                     NameLUT.Add(objectReader.m_PathID, gameObject.m_Name);
                                                 }
+                                                asset.Name = "";
                                                 exportable = false;
                                                 break;
                                             case ClassIDType.Shader:
