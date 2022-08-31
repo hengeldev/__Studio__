@@ -11,7 +11,7 @@ namespace AssetStudio
     public class AssetsManager
     {
         public Game Game;
-        public bool ResolveDependancies = true;
+        public bool ResolveDependancies;
         public string SpecifyUnityVersion;
         public List<SerializedFile> assetsFileList = new List<SerializedFile>();
 
@@ -25,7 +25,7 @@ namespace AssetStudio
         public void LoadFiles(params string[] files)
         {
             if (ResolveDependancies)
-                CABManager.ProcessDependencies(ref files);
+                files = CABManager.ProcessDependencies(files);
             var path = Path.GetDirectoryName(Path.GetFullPath(files[0]));
             MergeSplitAssets(path);
             var toReadFile = ProcessingSplitFiles(files.ToList());

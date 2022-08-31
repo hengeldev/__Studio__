@@ -2,10 +2,14 @@ name: Build
 
 on:
   push:
-    tags: [ '*' ]
-
-  workflow_dispatch:
-
+    branches:
+      - 'master'
+    paths-ignore:
+      - '**/LICENSE'
+      - '**/README.md'
+      - '**/build.yml'
+      - '**/.gitignore'
+      - '**/.gitattributes'
 jobs:
   build:
     runs-on: windows-latest

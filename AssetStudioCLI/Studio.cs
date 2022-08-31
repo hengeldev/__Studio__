@@ -27,7 +27,7 @@ namespace AssetStudioCLI
 
     internal static class Studio
     {
-        public static AssetsManager assetsManager = new AssetsManager();
+        public static AssetsManager assetsManager = new AssetsManager() { ResolveDependancies = false };
         public static List<AssetItem> exportableAssets = new List<AssetItem>();
         public static Game Game;
 

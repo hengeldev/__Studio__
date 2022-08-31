@@ -7,7 +7,7 @@ namespace AssetStudio
 {
     public static class CABManager
     {
-        public static Dictionary<string, Entry> CABMap = new Dictionary<string, Entry>();
+        public static Dictionary<string, Entry> CABMap = new Dictionary<string, Entry>(StringComparer.OrdinalIgnoreCase);
         public static Dictionary<string, HashSet<long>> offsets = new Dictionary<string, HashSet<long>>();
 
         public static void BuildMap(List<string> files, Game game)
@@ -89,7 +89,6 @@ namespace AssetStudio
                 using (var reader = new BinaryReader(binaryFile))
                 {
                     var count = reader.ReadInt32();
-                    CABMap = new Dictionary<string, Entry>(count);
                     for (int i = 0; i < count; i++)
                     {
                         var cab = reader.ReadString();
@@ -113,38 +112,35 @@ namespace AssetStudio
             }
         }
 
-        public static void AddCABOffset(string cab)
+        public static void AddCABOffsets(List<string> cabs)
         {
-            if (CABMap.TryGetValue(cab, out var wmvEntry))
+            for (int i = 0; i < cabs.Count; i++)
             {
-                if (!offsets.ContainsKey(wmvEntry.Path))
+                var cab = cabs[i];
+                if (CABMap.TryGetValue(cab, out var entry))
                 {
-                    offsets.Add(wmvEntry.Path, new HashSet<long>());
-                }
-                offsets[wmvEntry.Path].Add(wmvEntry.Offset);
-                foreach (var dep in wmvEntry.Dependencies)
-                {
-                    AddCABOffset(dep);
+                    if (!offsets.ContainsKey(entry.Path))
+                    {
+                        offsets.Add(entry.Path, new HashSet<long>());
+                    }
+                    offsets[entry.Path].Add(entry.Offset);
+                    foreach (var dep in entry.Dependencies)
+                    {
+                        if (!cabs.Contains(dep))
+                            cabs.Add(dep);
+                    }
                 }
             }
         }
 
         public static bool FindCAB(string path, out List<string> cabs)
         {
-            cabs = new List<string>();
-            foreach (var pair in CABMap)
-            {
-                if (pair.Value.Path.Contains(path))
-                {
-                    cabs.Add(pair.Key);
-                }
-            }
+            cabs = CABMap.Where(x => x.Value.Path.Contains(path)).Select(x => x.Key).ToList();
             return cabs.Count != 0;
         }
 
-        public static void ProcessFiles(ref string[] files)
+        public static string[] ProcessFiles(string[] files)
         {
-            var newFiles = files.ToList();
             foreach (var file in files)
             {
                 if (!offsets.ContainsKey(file))
@@ -153,32 +149,29 @@ namespace AssetStudio
                 }
                 if (FindCAB(file, out var cabs))
                 {
-                    foreach (var cab in cabs)
-                    {
-                        AddCABOffset(cab);
-                    }
+                    AddCABOffsets(cabs);
                 }
             }
-            newFiles.AddRange(offsets.Keys.ToList());
-            files = newFiles.ToArray();
+            return offsets.Keys.ToArray();
         }
 
-        public static void ProcessDependencies(ref string[] files)
+        public static string[] ProcessDependencies(string[] files)
         {
             if (CABMap.Count == 0)
             {
                 Logger.Warning("CABMap is not build, skip resolving dependencies...");
-                return;
             }
-
-
-            Logger.Info("Resolving Dependencies...");
-            var file = files.FirstOrDefault();
-            var supportedExtensions = GameManager.GetGames().Select(x => x.Extension).ToList();
-            if (supportedExtensions.Contains(Path.GetExtension(file)))
+            else
             {
-                ProcessFiles(ref files);
+                Logger.Info("Resolving Dependencies...");
+                var file = files.FirstOrDefault();
+                var supportedExtensions = GameManager.GetGames().Select(x => x.Extension).ToList();
+                if (supportedExtensions.Contains(Path.GetExtension(file)))
+                {
+                    files = ProcessFiles(files);
+                }
             }
+            return files;
         }
     }
 

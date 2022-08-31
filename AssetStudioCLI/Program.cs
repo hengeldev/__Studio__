@@ -36,7 +36,6 @@ namespace AssetStudioCLI
 
                     Studio.Game = game;
                     assetsManager.Game = game;
-                    assetsManager.ResolveDependancies = false;
                     AssetBundle.Exportable = !o.ExcludeAssetBundle;
                     IndexObject.Exportable = !o.ExcludeIndexObject;
 

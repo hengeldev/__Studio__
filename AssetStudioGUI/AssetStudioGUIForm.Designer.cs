@@ -40,6 +40,7 @@
             this.optionsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.displayAll = new System.Windows.Forms.ToolStripMenuItem();
             this.enablePreview = new System.Windows.Forms.ToolStripMenuItem();
+            this.enableResolveDependencies = new System.Windows.Forms.ToolStripMenuItem();
             this.displayInfo = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem14 = new System.Windows.Forms.ToolStripMenuItem();
             this.specifyUnityVersion = new System.Windows.Forms.ToolStripTextBox();
@@ -87,6 +88,7 @@
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabPage1 = new System.Windows.Forms.TabPage();
+            this.sceneTreeView = new AssetStudioGUI.GOHierarchy();
             this.treeSearch = new System.Windows.Forms.TextBox();
             this.tabPage2 = new System.Windows.Forms.TabPage();
             this.assetListView = new System.Windows.Forms.ListView();
@@ -133,7 +135,6 @@
             this.exportAnimatorwithselectedAnimationClipMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.goToSceneHierarchyToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.showOriginalFileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.sceneTreeView = new AssetStudioGUI.GOHierarchy();
             this.menuStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
@@ -221,6 +222,7 @@
             this.optionsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.displayAll,
             this.enablePreview,
+            this.enableResolveDependencies,
             this.displayInfo,
             this.toolStripMenuItem14,
             this.toolStripMenuItem17,
@@ -234,7 +236,7 @@
             // 
             this.displayAll.CheckOnClick = true;
             this.displayAll.Name = "displayAll";
-            this.displayAll.Size = new System.Drawing.Size(207, 22);
+            this.displayAll.Size = new System.Drawing.Size(225, 22);
             this.displayAll.Text = "Display all assets";
             this.displayAll.ToolTipText = "Check this option will display all types assets. Not extractable assets can expor" +
     "t the RAW file.";
@@ -246,11 +248,22 @@
             this.enablePreview.CheckOnClick = true;
             this.enablePreview.CheckState = System.Windows.Forms.CheckState.Checked;
             this.enablePreview.Name = "enablePreview";
-            this.enablePreview.Size = new System.Drawing.Size(207, 22);
+            this.enablePreview.Size = new System.Drawing.Size(225, 22);
             this.enablePreview.Text = "Enable preview";
             this.enablePreview.ToolTipText = "Toggle the loading and preview of readable assets, such as images, sounds, text, " +
     "etc.\r\nDisable preview if you have performance or compatibility issues.";
             this.enablePreview.CheckedChanged += new System.EventHandler(this.enablePreview_Check);
+            // 
+            // enableResolveDependencies
+            // 
+            this.enableResolveDependencies.Checked = true;
+            this.enableResolveDependencies.CheckOnClick = true;
+            this.enableResolveDependencies.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.enableResolveDependencies.Name = "enableResolveDependencies";
+            this.enableResolveDependencies.Size = new System.Drawing.Size(225, 22);
+            this.enableResolveDependencies.Text = "Enable resolve dependencies";
+            this.enableResolveDependencies.ToolTipText = "Toggle the behaviour of loading assets.\nDisable to load file(s) without its dependencies.";
+            this.enableResolveDependencies.CheckedChanged += new System.EventHandler(this.enableResolveDependencies_CheckedChanged);
             // 
             // displayInfo
             // 
@@ -258,7 +271,7 @@
             this.displayInfo.CheckOnClick = true;
             this.displayInfo.CheckState = System.Windows.Forms.CheckState.Checked;
             this.displayInfo.Name = "displayInfo";
-            this.displayInfo.Size = new System.Drawing.Size(207, 22);
+            this.displayInfo.Size = new System.Drawing.Size(225, 22);
             this.displayInfo.Text = "Display asset information";
             this.displayInfo.ToolTipText = "Toggle the overlay that shows information about each asset, eg. image size, forma" +
     "t, audio bitrate, etc.";
@@ -269,7 +282,7 @@
             this.toolStripMenuItem14.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.specifyUnityVersion});
             this.toolStripMenuItem14.Name = "toolStripMenuItem14";
-            this.toolStripMenuItem14.Size = new System.Drawing.Size(207, 22);
+            this.toolStripMenuItem14.Size = new System.Drawing.Size(225, 22);
             this.toolStripMenuItem14.Text = "Specify Unity version";
             // 
             // specifyUnityVersion
@@ -283,7 +296,7 @@
             this.toolStripMenuItem17.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.specifyGame});
             this.toolStripMenuItem17.Name = "toolStripMenuItem17";
-            this.toolStripMenuItem17.Size = new System.Drawing.Size(207, 22);
+            this.toolStripMenuItem17.Size = new System.Drawing.Size(225, 22);
             this.toolStripMenuItem17.Text = "Specify Game";
             // 
             // specifyGame
@@ -297,8 +310,9 @@
             this.toolStripMenuItem16.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.specifyAIVersion});
             this.toolStripMenuItem16.Name = "toolStripMenuItem16";
-            this.toolStripMenuItem16.Size = new System.Drawing.Size(207, 22);
+            this.toolStripMenuItem16.Size = new System.Drawing.Size(225, 22);
             this.toolStripMenuItem16.Text = "Specify AI version";
+            this.toolStripMenuItem16.MouseHover += new System.EventHandler(this.toolStripMenuItem16_MouseHover);
             // 
             // specifyAIVersion
             // 
@@ -312,7 +326,7 @@
             // showExpOpt
             // 
             this.showExpOpt.Name = "showExpOpt";
-            this.showExpOpt.Size = new System.Drawing.Size(207, 22);
+            this.showExpOpt.Size = new System.Drawing.Size(225, 22);
             this.showExpOpt.Text = "Export options";
             this.showExpOpt.Click += new System.EventHandler(this.showExpOpt_Click);
             // 
@@ -590,14 +604,14 @@
             // buildCABMapToolStripMenuItem
             // 
             this.buildCABMapToolStripMenuItem.Name = "buildCABMapToolStripMenuItem";
-            this.buildCABMapToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.buildCABMapToolStripMenuItem.Size = new System.Drawing.Size(156, 22);
             this.buildCABMapToolStripMenuItem.Text = "Build CABMap";
             this.buildCABMapToolStripMenuItem.Click += new System.EventHandler(this.buildCABMapToolStripMenuItem_Click);
             // 
             // buildAssetMapToolStripMenuItem
             // 
             this.buildAssetMapToolStripMenuItem.Name = "buildAssetMapToolStripMenuItem";
-            this.buildAssetMapToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.buildAssetMapToolStripMenuItem.Size = new System.Drawing.Size(156, 22);
             this.buildAssetMapToolStripMenuItem.Text = "Build AssetMap";
             this.buildAssetMapToolStripMenuItem.Click += new System.EventHandler(this.buildAssetMapToolStripMenuItem_Click);
             // 
@@ -649,6 +663,17 @@
             this.tabPage1.TabIndex = 0;
             this.tabPage1.Text = "Scene Hierarchy";
             this.tabPage1.UseVisualStyleBackColor = true;
+            // 
+            // sceneTreeView
+            // 
+            this.sceneTreeView.CheckBoxes = true;
+            this.sceneTreeView.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.sceneTreeView.HideSelection = false;
+            this.sceneTreeView.Location = new System.Drawing.Point(0, 20);
+            this.sceneTreeView.Name = "sceneTreeView";
+            this.sceneTreeView.Size = new System.Drawing.Size(472, 589);
+            this.sceneTreeView.TabIndex = 1;
+            this.sceneTreeView.AfterCheck += new System.Windows.Forms.TreeViewEventHandler(this.sceneTreeView_AfterCheck);
             // 
             // treeSearch
             // 
@@ -1129,17 +1154,6 @@
             this.showOriginalFileToolStripMenuItem.Visible = false;
             this.showOriginalFileToolStripMenuItem.Click += new System.EventHandler(this.showOriginalFileToolStripMenuItem_Click);
             // 
-            // sceneTreeView
-            // 
-            this.sceneTreeView.CheckBoxes = true;
-            this.sceneTreeView.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.sceneTreeView.HideSelection = false;
-            this.sceneTreeView.Location = new System.Drawing.Point(0, 20);
-            this.sceneTreeView.Name = "sceneTreeView";
-            this.sceneTreeView.Size = new System.Drawing.Size(472, 589);
-            this.sceneTreeView.TabIndex = 1;
-            this.sceneTreeView.AfterCheck += new System.Windows.Forms.TreeViewEventHandler(this.sceneTreeView_AfterCheck);
-            // 
             // AssetStudioGUIForm
             // 
             this.AllowDrop = true;
@@ -1294,6 +1308,7 @@
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem17;
         private System.Windows.Forms.ToolStripComboBox specifyGame;
         private System.Windows.Forms.ToolStripMenuItem buildAssetMapToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem enableResolveDependencies;
     }
 }
 

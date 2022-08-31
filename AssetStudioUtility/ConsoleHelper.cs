@@ -14,10 +14,6 @@ namespace AssetStudio
         public static extern bool SetConsoleTitle(string lpConsoleTitle);
 
         [DllImport("kernel32.dll", SetLastError = true)]
-        [return: MarshalAs(UnmanagedType.Bool)]
-        public static extern bool FreeConsole();
-
-        [DllImport("kernel32.dll", SetLastError = true)]
         public static extern IntPtr GetConsoleWindow();
 
         [DllImport("user32.dll", SetLastError = true)]

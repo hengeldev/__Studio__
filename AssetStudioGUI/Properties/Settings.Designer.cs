@@ -71,6 +71,21 @@ namespace AssetStudioGUI.Properties
                 this["enablePreview"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool enableResolveDependencies
+        {
+            get
+            {
+                return ((bool)(this["enableResolveDependencies"]));
+            }
+            set
+            {
+                this["enableResolveDependencies"] = value;
+            }
+        }
 
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]

@@ -106,17 +106,20 @@ namespace AssetStudioGUI
             displayAll.Checked = Properties.Settings.Default.displayAll;
             displayInfo.Checked = Properties.Settings.Default.displayInfo;
             enablePreview.Checked = Properties.Settings.Default.enablePreview;
+            enableResolveDependencies.Checked = Properties.Settings.Default.enableResolveDependencies;
+            assetsManager.ResolveDependancies = enableResolveDependencies.Checked;
             AssetBundle.Exportable = Properties.Settings.Default.exportAssetBundle;
             IndexObject.Exportable = Properties.Settings.Default.exportIndexObject;
             Renderer.Parsable = !Properties.Settings.Default.disableRndrr;
             Shader.Parsable = !Properties.Settings.Default.disableShader;
             MiHoYoBinData.doXOR = Properties.Settings.Default.enableXor;
             MiHoYoBinData.Key = Properties.Settings.Default.key;
-            ConsoleHelper.AllocConsole();
-            ConsoleHelper.SetConsoleTitle("Debug Console");
             FMODinit();
 
             logger = new GUILogger(StatusStripUpdate);
+
+            ConsoleHelper.AllocConsole();
+            ConsoleHelper.SetConsoleTitle("Debug Console");
             var handle = ConsoleHelper.GetConsoleWindow();
             if (console.Checked)
             {
@@ -130,17 +133,13 @@ namespace AssetStudioGUI
             }
             Progress.Default = new Progress<int>(SetProgressBarValue);
             Studio.StatusStripUpdate = StatusStripUpdate;
-            specifyAIVersion.Items.AddRange(AIVersionManager.GetVersions());
             specifyGame.Items.AddRange(GameManager.GetGames());
             Studio.Game = GameManager.GetGame(Properties.Settings.Default.selectedGame);
             specifyGame.SelectedIndex = Properties.Settings.Default.selectedGame;
             specifyGame.SelectedIndexChanged += new EventHandler(toolStripComboBox2_SelectedIndexChanged);
             Logger.Info($"Target Game is {Studio.Game.DisplayName}");
             CABManager.LoadMap(Studio.Game);
-        }
-        ~AssetStudioGUIForm()
-        {
-            ConsoleHelper.FreeConsole();
+            Task.Run(() => AIVersionManager.FetchVersions());
         }
 
         private void AssetStudioGUIForm_DragEnter(object sender, DragEventArgs e)
@@ -490,6 +489,14 @@ namespace AssetStudioGUI
 
             Properties.Settings.Default.enablePreview = enablePreview.Checked;
             Properties.Settings.Default.Save();
+        }
+
+        private void enableResolveDependencies_CheckedChanged(object sender, EventArgs e)
+        {
+            Properties.Settings.Default.enableResolveDependencies = enableResolveDependencies.Checked;
+            Properties.Settings.Default.Save();
+
+            assetsManager.ResolveDependancies = enableResolveDependencies.Checked;
         }
 
         private void displayAssetInfo_Check(object sender, EventArgs e)
@@ -2183,6 +2190,14 @@ namespace AssetStudioGUI
             }
         }
 
+        private void toolStripMenuItem16_MouseHover(object sender, EventArgs e)
+        {
+            if (specifyAIVersion.Items.Count == 1 && AIVersionManager.Loaded)
+            {
+                specifyAIVersion.Items.AddRange(AIVersionManager.GetVersions());
+            }
+        }
+
         private async void toolStripComboBox1_SelectedIndexChanged(object sender, EventArgs e)
         {
             if (specifyAIVersion.SelectedIndex == 0) return;
@@ -2230,11 +2245,11 @@ namespace AssetStudioGUI
         {
             if (InvokeRequired)
             {
-                BeginInvoke(new Action(() => { specifyAIVersion.Enabled = true; }));
+                BeginInvoke(new Action(() => { specifyAIVersion.Enabled = value; }));
             }
             else
             {
-                specifyAIVersion.Enabled = true;
+                specifyAIVersion.Enabled = value;
             }
         }
 

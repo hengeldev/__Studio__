@@ -29,12 +29,15 @@ namespace AssetStudio
 
         private static List<VersionIndex> Versions;
         
+        public static bool Loaded;
+        
         static AIVersionManager()
         {
             Client = new HttpClient();
             Client.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (compatible; MSIE 6.0; Windows 98; Trident/5.1)");
             Client.Timeout = TimeSpan.FromMinutes(1);
             Versions = new List<VersionIndex>();
+            Loaded = false;
         }
 
         public static Uri CreateUri(string source, out Uri result) => Uri.TryCreate(source, UriKind.Absolute, out result) && result.Scheme == Uri.UriSchemeHttps ? result : null;
@@ -48,6 +51,7 @@ namespace AssetStudio
                 return;
             }
             Versions = JsonConvert.DeserializeObject<List<VersionIndex>>(versions);
+            Loaded = Versions.Count > 0;
         }
 
         public static async Task<string> DownloadString(string url)
@@ -170,10 +174,6 @@ namespace AssetStudio
             return commit;
         }
 
-        public static string[] GetVersions()
-        {
-            FetchVersions();
-            return Versions.Select(x => x.Version).ToArray();
-        }
+        public static string[] GetVersions() => Versions.Select(x => x.Version).ToArray();
     }
 }
