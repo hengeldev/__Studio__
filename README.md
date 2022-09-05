@@ -38,53 +38,30 @@ How to use:
 _____________________________________________________________________________________________________________________________
 CLI Version:
 ```
-AssetStudioCLI 0.16.66
-Copyright (C) 2022 AssetStudioCLI
+Description:
 
-  -v, --verbose           Show log messages.
+Usage:
+  AssetStudioCLI <input_path> <output_path> [options]
 
-  -t, --type              Specify unity class type(s). (e.g: Texture2D, Sprite)
+Arguments:
+  <input_path>   Input file/folder.
+  <output_path>  Output folder.
 
-  -f, --filter            Specify regex filter(s).
-
-  -g, --game              Required. Specify Game.
-
-  -m, --map               (Default: None) Specify which map to build.
-
-                          Options:
-                          None
-                          AssetMap
-                          CABMap
-                          Both
-
-  -M, --maptype           (Default: XML) AssetMap output type.
-
-                          Options:
-                          XML
-                          JSON
-
-  -n, --mapName           (Default: assets_map) Specify AssetMap file name.
-
-  -G, --group             (Default: 0) Specify how exported assets should be grouped.
-
-                          Options:
-                          0 (type name)
-                          1 (container path)
-                          2 (Source file name)
-
-  -a, --noassetbundle     Exclude AssetBundle from AssetMap/Export.
-
-  -i, --noindexobject     Exclude IndexObject/MiHoYoBinData from AssetMap/Export.
-
-  -k, --xorkey            XOR key to decrypt MiHoYoBinData.
-
-  --help                  Display this help screen.
-
-  --version               Display version information.
-
-  input_path (pos. 0)     Required. Input file/folder.
-
-  output_path (pos. 1)    Required. Output folder.
+Options:
+  --verbose                                               Show log messages.
+  --type <Texture2D|Sprite|etc..>                         Specify unity class type(s)
+  --filter <filter>                                       Specify regex filter(s).
+  --game <BH3|GI|SR|TOT> (REQUIRED)                       Specify Game.
+  --map_op <AssetMap|Both|CABMap|None>                    Specify which map to build. [default: None]
+  --map_type <JSON|XML>                                   AssetMap output type. [default: XML]
+  --map_name <map_name>                                   Specify AssetMap file name.
+  --group_assets_type <ByContainer|BySource|ByType|None>  Specify how exported assets should be grouped. [default: 0]
+  --no_asset_bundle                                       Exclude AssetBundle from AssetMap/Export.
+  --no_index_object                                       Exclude IndexObject/MiHoYoBinData from AssetMap/Export.
+  --xor_key <xor_key>                                     XOR key to decrypt MiHoYoBinData.
+  --ai_file <ai_file>                                     Specify asset_index json file path (to recover GI containers).
+  --version                                               Show version information
+  -?, -h, --help                                          Show help and usage information
 ```
 _____________________________________________________________________________________________________________________________
 NOTES:
