@@ -32,6 +32,7 @@
             this.OKbutton = new System.Windows.Forms.Button();
             this.Cancel = new System.Windows.Forms.Button();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.disableShader = new System.Windows.Forms.CheckBox();
             this.ignoreController = new System.Windows.Forms.CheckBox();
             this.disableRndrr = new System.Windows.Forms.CheckBox();
             this.exportIndexObject = new System.Windows.Forms.CheckBox();
@@ -70,7 +71,6 @@
             this.enableXor = new System.Windows.Forms.CheckBox();
             this.key = new System.Windows.Forms.NumericUpDown();
             this.label7 = new System.Windows.Forms.Label();
-            this.disableShader = new System.Windows.Forms.CheckBox();
             this.groupBox1.SuspendLayout();
             this.panel1.SuspendLayout();
             this.groupBox2.SuspendLayout();
@@ -123,6 +123,16 @@
             this.groupBox1.TabIndex = 9;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Export";
+            // 
+            // disableShader
+            // 
+            this.disableShader.AutoSize = true;
+            this.disableShader.Location = new System.Drawing.Point(97, 219);
+            this.disableShader.Name = "disableShader";
+            this.disableShader.Size = new System.Drawing.Size(98, 17);
+            this.disableShader.TabIndex = 22;
+            this.disableShader.Text = "Disable Shader";
+            this.disableShader.UseVisualStyleBackColor = true;
             // 
             // ignoreController
             // 
@@ -572,16 +582,6 @@
             this.label7.Size = new System.Drawing.Size(25, 13);
             this.label7.TabIndex = 7;
             this.label7.Text = "Key";
-            // 
-            // disableShader
-            // 
-            this.disableShader.AutoSize = true;
-            this.disableShader.Location = new System.Drawing.Point(97, 219);
-            this.disableShader.Name = "disableShader";
-            this.disableShader.Size = new System.Drawing.Size(98, 17);
-            this.disableShader.TabIndex = 22;
-            this.disableShader.Text = "Disable Shader";
-            this.disableShader.UseVisualStyleBackColor = true;
             // 
             // ExportOptions
             // 

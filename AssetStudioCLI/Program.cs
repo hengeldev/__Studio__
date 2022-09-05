@@ -1,11 +1,11 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
-using System.Collections.Generic;
+using System.CommandLine;
+using System.CommandLine.Binding;
 using System.Text.RegularExpressions;
 using static AssetStudioCLI.Studio;
 using AssetStudio;
-using CommandLine;
 
 namespace AssetStudioCLI 
 {
@@ -13,15 +13,32 @@ namespace AssetStudioCLI
     {
         public static void Main(string[] args)
         {
-            var parser = new Parser(config =>
+            var rootCommand = RegisterOptions();
+            rootCommand.Invoke(args);
+        }
+
+        public static RootCommand RegisterOptions()
+        {
+            var optionsBinder = new OptionsBinder();
+            var rootCommand = new RootCommand()
             {
-                config.AutoHelp = true;
-                config.AutoVersion = true;
-                config.CaseInsensitiveEnumValues = true;
-                config.HelpWriter = Console.Out;
-            });
-            parser.ParseArguments<Options>(args)
-            .WithParsed(o =>
+                optionsBinder.Verbose,
+                optionsBinder.Types,
+                optionsBinder.Filters,
+                optionsBinder.GameName,
+                optionsBinder.MapOp,
+                optionsBinder.MapType,
+                optionsBinder.MapName,
+                optionsBinder.GroupAssetsType,
+                optionsBinder.NoAssetBundle,
+                optionsBinder.NoIndexObject,
+                optionsBinder.XorByte,
+                optionsBinder.AIFile,
+                optionsBinder.Input,
+                optionsBinder.Output
+            };
+
+            rootCommand.SetHandler((Options o) =>
             {
                 try
                 {
@@ -36,65 +53,67 @@ namespace AssetStudioCLI
 
                     Studio.Game = game;
                     assetsManager.Game = game;
-                    AssetBundle.Exportable = !o.ExcludeAssetBundle;
-                    IndexObject.Exportable = !o.ExcludeIndexObject;
+                    AssetBundle.Exportable = !o.NoAssetBundle;
+                    IndexObject.Exportable = !o.NoIndexObject;
 
                     if (o.Verbose)
                     {
                         Logger.Default = new ConsoleLogger();
                     }
 
-                    if (o.XORKey != default)
+                    if (o.XorKey != default)
                     {
-                        if (o.ExcludeIndexObject)
+                        if (o.NoIndexObject)
                         {
                             Logger.Warning("XOR key is set but IndexObject/MiHoYoBinData is excluded, ignoring key...");
                         }
                         else
                         {
                             MiHoYoBinData.doXOR = true;
-                            MiHoYoBinData.Key = o.XORKey;
+                            MiHoYoBinData.Key = o.XorKey;
                         }
-                        
                     }
 
-                    var inputPath = o.Input;
-                    var outputPath = o.Output;
-                    var types = o.Types.ToArray();
-                    var filtes = o.Filters.ToArray();
+                    if (o.AIFile != null && game.Name == "GI")
+                    {
+                        ResourceIndex.FromFile(o.AIFile.FullName);
+                    }
 
                     Logger.Info("Scanning for files");
-                    var files = Directory.Exists(inputPath) ? Directory.GetFiles(inputPath, $"*{game.Extension}", SearchOption.AllDirectories).OrderBy(x => x.Length).ToArray() : new string[] { inputPath };
+                    var files = o.Input.Attributes == FileAttributes.Directory ? Directory.GetFiles(o.Input.FullName, $"*{game.Extension}", SearchOption.AllDirectories).OrderBy(x => x.Length).ToArray() : new string[] { o.Input.FullName };
                     Logger.Info(string.Format("Found {0} file(s)", files.Count()));
 
-                    if (o.Map.Equals(MapOpType.None))
+                    if (o.MapOp.Equals(MapOpType.None))
                     {
                         foreach (var file in files)
                         {
                             assetsManager.LoadFiles(file);
-                            BuildAssetData(types, filtes);
-                            ExportAssets(outputPath, exportableAssets, o.AssetGroupOption);
+                            BuildAssetData(o.Types, o.Filters);
+                            ExportAssets(o.Output.FullName, exportableAssets, o.GroupAssetType);
                             exportableAssets.Clear();
                             assetsManager.Clear();
                         }
                     }
-                    if (o.Map.HasFlag(MapOpType.CABMap))
+                    if (o.MapOp.HasFlag(MapOpType.CABMap))
                     {
                         CABManager.BuildMap(files.ToList(), game);
                     }
-                    if (o.Map.HasFlag(MapOpType.AssetMap))
+                    if (o.MapOp.HasFlag(MapOpType.AssetMap))
                     {
                         if (files.Length == 1)
                         {
                             throw new Exception("Unable to build AssetMap with input_path as a file !!");
                         }
-                        var assets = BuildAssetMap(files.ToList(), types, filtes);
-                        var dirInfo = new DirectoryInfo(outputPath);
-                        if (!dirInfo.Exists)
+                        var assets = BuildAssetMap(files.ToList(), o.Types, o.Filters);
+                        if (!o.Output.Exists)
                         {
-                            dirInfo.Create();
+                            o.Output.Create();
                         }
-                        ExportAssetsMap(outputPath, assets, o.AssetMapName, o.AssetMapType);
+                        if (string.IsNullOrEmpty(o.MapName))
+                        {
+                            o.MapName = $"assets_map_{game.Name}";
+                        }
+                        ExportAssetsMap(o.Output.FullName, assets, o.MapName, o.MapType);
                     }
                 }
                 catch (Exception e)
@@ -102,38 +121,145 @@ namespace AssetStudioCLI
                     Console.WriteLine(e.Message);
                     Console.WriteLine(e.StackTrace);
                 }
-            });
+            }, optionsBinder);
 
+            return rootCommand;
         }
     }
 
     public class Options
     {
-        [Option('v', "verbose", HelpText = "Show log messages.")]
         public bool Verbose { get; set; }
-        [Option('t', "type", HelpText = "Specify unity class type(s). (e.g: Texture2D, Sprite)")]
-        public IEnumerable<ClassIDType> Types { get; set; }
-        [Option('f', "filter", HelpText = "Specify regex filter(s).")]
-        public IEnumerable<Regex> Filters { get; set; }
-        [Option('g', "game", Required = true, HelpText = "Specify Game.")]
+        public ClassIDType[] Types { get; set; }
+        public Regex[] Filters { get; set; }
         public string GameName { get; set; }
-        [Option('m', "map", HelpText = "Specify which map to build.\n\nOptions:\nNone\nAssetMap\nCABMap\nBoth", Default = MapOpType.None)]
-        public MapOpType Map { get; set; }
-        [Option('M', "maptype", HelpText = "AssetMap output type.\n\nOptions:\nXML\nJSON", Default = ExportListType.XML)]
-        public ExportListType AssetMapType { get; set; }
-        [Option('n', "mapName", HelpText = "Specify AssetMap file name.", Default = "assets_map")]
-        public string AssetMapName { get; set; }
-        [Option('G', "group", HelpText = "Specify how exported assets should be grouped.\n\nOptions:\n0 (type name)\n1 (container path)\n2 (Source file name)", Default = 0)]
-        public int AssetGroupOption { get; set; }
-        [Option('a', "noassetbundle", HelpText = "Exclude AssetBundle from AssetMap/Export.")]
-        public bool ExcludeAssetBundle { get; set; }
-        [Option('i', "noindexobject", HelpText = "Exclude IndexObject/MiHoYoBinData from AssetMap/Export.")]
-        public bool ExcludeIndexObject { get; set; }
-        [Option('k', "xorkey", HelpText = "XOR key to decrypt MiHoYoBinData.")]
-        public byte XORKey { get; set; }
-        [Value(0, Required = true, MetaName = "input_path", HelpText = "Input file/folder.")]
-        public string Input { get; set; }
-        [Value(1, Required = true, MetaName = "output_path", HelpText = "Output folder.")]
-        public string Output { get; set; }
+        public MapOpType MapOp { get; set; }
+        public ExportListType MapType { get; set; }
+        public string MapName { get; set; }
+        public AssetGroupOption GroupAssetType { get; set; }
+        public bool NoAssetBundle { get; set; }
+        public bool NoIndexObject { get; set; }
+        public byte XorKey { get; set; }
+        public FileInfo AIFile { get; set; }
+        public FileInfo Input { get; set; }
+        public DirectoryInfo Output { get; set; }
+    }
+
+    public class OptionsBinder : BinderBase<Options>
+    {
+        public readonly Option<bool> Verbose;
+        public readonly Option<ClassIDType[]> Types;
+        public readonly Option<Regex[]> Filters;
+        public readonly Option<string> GameName;
+        public readonly Option<MapOpType> MapOp;
+        public readonly Option<ExportListType> MapType;
+        public readonly Option<string> MapName;
+        public readonly Option<AssetGroupOption> GroupAssetsType;
+        public readonly Option<bool> NoAssetBundle;
+        public readonly Option<bool> NoIndexObject;
+        public readonly Option<byte> XorByte;
+        public readonly Option<FileInfo> AIFile;
+        public readonly Argument<FileInfo> Input;
+        public readonly Argument<DirectoryInfo> Output;
+
+        public OptionsBinder()
+        {
+            Verbose = new Option<bool>("--verbose", "Show log messages.");
+            Types = new Option<ClassIDType[]>("--type", "Specify unity class type(s)") { AllowMultipleArgumentsPerToken = true, ArgumentHelpName = "Texture2D|Sprite|etc.." };
+            Filters = new Option<Regex[]>("--filter", result => result.Tokens.Select(x => new Regex(x.Value)).ToArray(), false, "Specify regex filter(s).") { AllowMultipleArgumentsPerToken = true };
+            GameName = new Option<string>("--game", $"Specify Game.") { IsRequired = true };
+            MapOp = new Option<MapOpType>("--map_op", "Specify which map to build.");
+            MapType = new Option<ExportListType>("--map_type", "AssetMap output type.");
+            MapName = new Option<string>("--map_name", "Specify AssetMap file name.");
+            GroupAssetsType = new Option<AssetGroupOption>("--group_assets_type", "Specify how exported assets should be grouped.");
+            NoAssetBundle = new Option<bool>("--no_asset_bundle", "Exclude AssetBundle from AssetMap/Export.");
+            NoIndexObject = new Option<bool>("--no_index_object", "Exclude IndexObject/MiHoYoBinData from AssetMap/Export.");
+            AIFile = new Option<FileInfo>("--ai_file", "Specify asset_index json file path (to recover GI containers).").LegalFilePathsOnly();
+            Input = new Argument<FileInfo>("input_path", "Input file/folder.").LegalFilePathsOnly();
+            Output = new Argument<DirectoryInfo>("output_path", "Output folder.").LegalFilePathsOnly();
+
+            XorByte = new Option<byte>("--xor_key", result =>
+            {
+                var value = result.Tokens.Single().Value;
+                if (value.StartsWith("0x"))
+                {
+                    value = value.Substring(2);
+                    return Convert.ToByte(value, 0x10);
+                }
+                else
+                {
+                    return byte.Parse(value);
+                }
+            }, false, "XOR key to decrypt MiHoYoBinData.");
+
+            Filters.AddValidator(result =>
+            {
+                var values = result.Tokens.Select(x => x.Value).ToArray();
+                foreach(var val in values)
+                {
+                    if (string.IsNullOrWhiteSpace(val))
+                    {
+                        result.ErrorMessage = "Empty string.";
+                        return;
+                    }
+
+                    try
+                    {
+                        Regex.Match("", val);
+                    }
+                    catch (ArgumentException e)
+                    {
+                        result.ErrorMessage = "Invalid Regex.\n" + e.Message;
+                        return;
+                    }
+                }
+            });
+
+            XorByte.AddValidator(result =>
+            {
+                var value = result.Tokens.Single().Value;
+                try
+                {
+                    if (value.StartsWith("0x"))
+                    {
+                        value = value.Substring(2);
+                        Convert.ToByte(value, 0x10);
+                    }
+                    else
+                    {
+                        byte.Parse(value);
+                    }
+                }
+                catch(Exception e)
+                {
+                    result.ErrorMessage = "Invalid byte value.\n" + e.Message;
+                } 
+            });
+
+            GameName.FromAmong(GameManager.GetGameNames());
+
+            GroupAssetsType.SetDefaultValue(0);
+            MapOp.SetDefaultValue(MapOpType.None);
+            MapType.SetDefaultValue(ExportListType.XML);
+        }
+
+        protected override Options GetBoundValue(BindingContext bindingContext) =>
+        new Options
+        {
+            Verbose = bindingContext.ParseResult.GetValueForOption(Verbose),
+            Types = bindingContext.ParseResult.GetValueForOption(Types),
+            Filters = bindingContext.ParseResult.GetValueForOption(Filters),
+            GameName = bindingContext.ParseResult.GetValueForOption(GameName),
+            MapOp = bindingContext.ParseResult.GetValueForOption(MapOp),
+            MapType = bindingContext.ParseResult.GetValueForOption(MapType),
+            MapName = bindingContext.ParseResult.GetValueForOption(MapName),
+            GroupAssetType = bindingContext.ParseResult.GetValueForOption(GroupAssetsType),
+            NoAssetBundle = bindingContext.ParseResult.GetValueForOption(NoAssetBundle),
+            NoIndexObject = bindingContext.ParseResult.GetValueForOption(NoIndexObject),
+            XorKey = bindingContext.ParseResult.GetValueForOption(XorByte),
+            AIFile = bindingContext.ParseResult.GetValueForOption(AIFile),
+            Input = bindingContext.ParseResult.GetValueForArgument(Input),
+            Output = bindingContext.ParseResult.GetValueForArgument(Output)
+        };
     }
 }

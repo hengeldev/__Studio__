@@ -26,14 +26,6 @@ namespace AssetStudio
             Length = stream.Length;
             
         }
-        public FileReader(Stream stream, Game game = null) : base(stream, EndianType.BigEndian, game)
-        {
-            Game = game;
-            FullPath = "";
-            FileName = "";
-            FileType = CheckFileType();
-            Length = stream.Length;
-        }
 
         private FileType CheckFileType()
         {

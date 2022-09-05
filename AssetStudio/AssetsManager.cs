@@ -330,8 +330,7 @@ namespace AssetStudio
             {
                 HoYoFile hoyoFile;
                 reader.BundlePos = CABManager.offsets.TryGetValue(reader.FullPath, out var list) ? list.ToArray() : Array.Empty<long>();
-                hoyoFile = new HoYoFile();
-                hoyoFile.LoadFile(reader);
+                hoyoFile = new HoYoFile(reader);
                 foreach (var bundle in hoyoFile.Bundles)
                 {
                     foreach (var file in bundle.Value)

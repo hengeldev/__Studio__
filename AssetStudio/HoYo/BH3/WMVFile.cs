@@ -1,7 +1,10 @@
-﻿namespace AssetStudio
+﻿using System.Collections.Generic;
+
+namespace AssetStudio
 {
-    public class WMVFile : HoYoFile
+    public class WMVFile
     {
+        public Dictionary<long, StreamFile[]> Bundles = new Dictionary<long, StreamFile[]>();
         public WMVFile(FileReader reader)
         {
             if (reader.BundlePos.Length != 0)
@@ -15,10 +18,9 @@
             }
             else
             {
-                long pos = -1;
                 while (reader.Position != reader.Length)
                 {
-                    pos = reader.Position;
+                    var pos = reader.Position;
                     var bundle = new BundleFile(reader);
                     Bundles.Add(pos, bundle.FileList);
                 }

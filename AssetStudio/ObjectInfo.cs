@@ -20,19 +20,32 @@ namespace AssetStudio
         public bool HasExportableType()
         {
             var typeID = (ClassIDType)classID;
-            return typeID == ClassIDType.GameObject
-                || typeID == ClassIDType.Material
-                || typeID == ClassIDType.Texture2D
-                || typeID == ClassIDType.Mesh
-                || typeID == ClassIDType.Shader
-                || typeID == ClassIDType.TextAsset
-                || typeID == ClassIDType.AnimationClip
-                || typeID == ClassIDType.Animator
-                || typeID == ClassIDType.Font
-                || (typeID == ClassIDType.AssetBundle && AssetBundle.Exportable)
-                || typeID == ClassIDType.Sprite
-                || (typeID == ClassIDType.MiHoYoBinData && IndexObject.Exportable)
-                || (typeID == ClassIDType.IndexObject && IndexObject.Exportable);
+            var isExportableType = ExportableTypes.Contains(typeID);
+            switch (typeID)
+            {
+                case ClassIDType.IndexObject:
+                case ClassIDType.MiHoYoBinData:
+                    return isExportableType && IndexObject.Exportable;
+                default:
+                    return isExportableType;
+            }
         }
+
+        public static ClassIDType[] ExportableTypes = new ClassIDType[]
+        {
+            ClassIDType.GameObject,
+            ClassIDType.Material,
+            ClassIDType.Texture2D,
+            ClassIDType.Mesh,
+            ClassIDType.Shader,
+            ClassIDType.TextAsset,
+            ClassIDType.AnimationClip,
+            ClassIDType.Animator,
+            ClassIDType.Font,
+            ClassIDType.AssetBundle,
+            ClassIDType.Sprite,
+            ClassIDType.MiHoYoBinData,
+            ClassIDType.IndexObject
+        };
     }
 }

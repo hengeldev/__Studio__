@@ -6,14 +6,9 @@ namespace AssetStudio
 {
     public class HoYoFile
     {
-        public Dictionary<long, StreamFile[]> Bundles;
+        public Dictionary<long, StreamFile[]> Bundles = new Dictionary<long, StreamFile[]>();
 
-        public HoYoFile()
-        {
-            Bundles = new Dictionary<long, StreamFile[]>();
-        }
-
-        public void LoadFile(FileReader reader)
+        public HoYoFile(FileReader reader)
         {
             var bundles = new Dictionary<long, StreamFile[]>();
             var ext = Path.GetExtension(reader.FileName);

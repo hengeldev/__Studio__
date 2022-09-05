@@ -17,6 +17,7 @@ namespace AssetStudioCLI
 
         public AssetItem(Object asset)
         {
+            Text = "";
             Asset = asset;
             SourceFile = asset.assetsFile;
             Type = asset.type;

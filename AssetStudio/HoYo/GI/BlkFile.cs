@@ -1,10 +1,12 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 
 namespace AssetStudio
 {
-    public class BlkFile : HoYoFile
+    public class BlkFile
     {
+        public Dictionary<long, StreamFile[]> Bundles = new Dictionary<long, StreamFile[]>();
         public BlkFile(FileReader reader)
         {
             reader.Endian = EndianType.LittleEndian;

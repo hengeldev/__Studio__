@@ -23,13 +23,13 @@ namespace AssetStudio
                     var file = files[i];
                     using (var reader = new FileReader(file, game))
                     {
-                        var hoyoFile = new HoYoFile();
-                        hoyoFile.LoadFile(reader);
+                        var hoyoFile = new HoYoFile(reader);
                         foreach (var bundle in hoyoFile.Bundles)
                         {
                             foreach (var cab in bundle.Value)
                             {
-                                using (var cabReader = new FileReader(cab.stream))
+                                var dummyPath = Path.Combine(Path.GetDirectoryName(reader.FullPath), cab.fileName);
+                                using (var cabReader = new FileReader(dummyPath, cab.stream))
                                 {
                                     if (cabReader.FileType == FileType.AssetsFile)
                                     {
@@ -38,7 +38,7 @@ namespace AssetStudio
                                             collisions++;
                                             continue;
                                         }
-                                        var assetsFile = new SerializedFile(cabReader, null);
+                                        var assetsFile = new SerializedFile(cabReader, null, reader.FullPath);
                                         var dependencies = assetsFile.m_Externals.Select(x => x.fileName).ToList();
                                         CABMap.Add(cab.path, new Entry(file, bundle.Key, dependencies));
                                     }
@@ -112,18 +112,21 @@ namespace AssetStudio
             }
         }
 
-        public static void AddCABOffsets(List<string> cabs)
+        public static void AddCABOffsets(string[] path, List<string> cabs)
         {
             for (int i = 0; i < cabs.Count; i++)
             {
                 var cab = cabs[i];
                 if (CABMap.TryGetValue(cab, out var entry))
                 {
-                    if (!offsets.ContainsKey(entry.Path))
+                    if (!path.Contains(entry.Path))
                     {
-                        offsets.Add(entry.Path, new HashSet<long>());
+                        if (!offsets.ContainsKey(entry.Path))
+                        {
+                            offsets.Add(entry.Path, new HashSet<long>());
+                        }
+                        offsets[entry.Path].Add(entry.Offset);
                     }
-                    offsets[entry.Path].Add(entry.Offset);
                     foreach (var dep in entry.Dependencies)
                     {
                         if (!cabs.Contains(dep))
@@ -149,7 +152,7 @@ namespace AssetStudio
                 }
                 if (FindCAB(file, out var cabs))
                 {
-                    AddCABOffsets(cabs);
+                    AddCABOffsets(files, cabs);
                 }
             }
             return offsets.Keys.ToArray();

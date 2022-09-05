@@ -328,7 +328,7 @@ namespace AssetStudioGUI
                 Directory.CreateDirectory(dir);
                 return true;
             }
-            fullPath = Path.Combine(dir, fileName + "_" + item.m_PathID.ToString("X8") + extension);
+            fullPath = Path.Combine(dir, fileName + item.UniqueID + extension);
             if (!File.Exists(fullPath))
             {
                 Directory.CreateDirectory(dir);
