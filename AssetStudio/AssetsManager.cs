@@ -26,19 +26,13 @@ namespace AssetStudio
         {
             if (ResolveDependancies)
                 files = CABManager.ProcessDependencies(files);
-            var path = Path.GetDirectoryName(Path.GetFullPath(files[0]));
-            MergeSplitAssets(path);
-            var toReadFile = ProcessingSplitFiles(files.ToList());
-            Load(toReadFile);
+            Load(files);
         }
 
         public void LoadFolder(string path)
         {
-            MergeSplitAssets(path, true);
             var files = Directory.GetFiles(path, "*.*", SearchOption.AllDirectories).ToArray();
-            var filesList = files.ToList();
-            var toReadFile = ProcessingSplitFiles(filesList);
-            Load(toReadFile);
+            Load(files);
         }
 
         private void Load(string[] files)
