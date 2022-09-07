@@ -85,10 +85,11 @@ namespace AssetStudioCLI
 
                     if (o.MapOp.Equals(MapOpType.None))
                     {
+                        var i = 0;
                         foreach (var file in files)
                         {
                             assetsManager.LoadFiles(file);
-                            BuildAssetData(o.Types, o.Filters);
+                            BuildAssetData(o.Types, o.Filters, ref i);
                             ExportAssets(o.Output.FullName, exportableAssets, o.GroupAssetType);
                             exportableAssets.Clear();
                             assetsManager.Clear();

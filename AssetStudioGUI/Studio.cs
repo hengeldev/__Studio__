@@ -326,7 +326,7 @@ namespace AssetStudioGUI
                 {
                     var assetItem = new AssetItem(asset);
                     objectAssetItemDic.Add(asset, assetItem);
-                    assetItem.UniqueID = " #" + assetItem.m_PathID.ToString("X8");
+                    assetItem.UniqueID = "#" + i;
                     var exportable = false;
                     switch (asset)
                     {

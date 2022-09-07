@@ -298,20 +298,19 @@ namespace AssetStudioCLI
             return assets;
         }
 
-        public static void BuildAssetData(ClassIDType[] formats, Regex[] filters)
+        public static void BuildAssetData(ClassIDType[] formats, Regex[] filters, ref int i)
         {
             string productName = null;
             var objectCount = assetsManager.assetsFileList.Sum(x => x.Objects.Count);
             var objectAssetItemDic = new Dictionary<Object, AssetItem>(objectCount);
             var containers = new List<(PPtr<Object>, string)>();
-            int i = 0;
             foreach (var assetsFile in assetsManager.assetsFileList)
             {
                 foreach (var asset in assetsFile.Objects)
                 {
                     var assetItem = new AssetItem(asset);
                     objectAssetItemDic.Add(asset, assetItem);
-                    assetItem.UniqueID = " #" + assetItem.m_PathID.ToString("X8");
+                    assetItem.UniqueID = "#" + i;
                     var exportable = false;
                     switch (asset)
                     {
@@ -447,6 +446,7 @@ namespace AssetStudioCLI
                     if (isMatchRegex && isFilteredType && exportable)
                     {
                         exportableAssets.Add(assetItem);
+                        i++;
                     }
                 }
             }
