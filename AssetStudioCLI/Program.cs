@@ -22,7 +22,7 @@ namespace AssetStudioCLI
             var optionsBinder = new OptionsBinder();
             var rootCommand = new RootCommand()
             {
-                optionsBinder.Verbose,
+                optionsBinder.Silent,
                 optionsBinder.Types,
                 optionsBinder.Filters,
                 optionsBinder.GameName,
@@ -56,7 +56,7 @@ namespace AssetStudioCLI
                     AssetBundle.Exportable = !o.NoAssetBundle;
                     IndexObject.Exportable = !o.NoIndexObject;
 
-                    if (o.Verbose)
+                    if (!o.Silent)
                     {
                         Logger.Default = new ConsoleLogger();
                     }
@@ -129,7 +129,7 @@ namespace AssetStudioCLI
 
     public class Options
     {
-        public bool Verbose { get; set; }
+        public bool Silent { get; set; }
         public ClassIDType[] Types { get; set; }
         public Regex[] Filters { get; set; }
         public string GameName { get; set; }
@@ -147,7 +147,7 @@ namespace AssetStudioCLI
 
     public class OptionsBinder : BinderBase<Options>
     {
-        public readonly Option<bool> Verbose;
+        public readonly Option<bool> Silent;
         public readonly Option<ClassIDType[]> Types;
         public readonly Option<Regex[]> Filters;
         public readonly Option<string> GameName;
@@ -164,7 +164,7 @@ namespace AssetStudioCLI
 
         public OptionsBinder()
         {
-            Verbose = new Option<bool>("--verbose", "Show log messages.");
+            Silent = new Option<bool>("--silent", "Hide log messages.");
             Types = new Option<ClassIDType[]>("--type", "Specify unity class type(s)") { AllowMultipleArgumentsPerToken = true, ArgumentHelpName = "Texture2D|Sprite|etc.." };
             Filters = new Option<Regex[]>("--filter", result => result.Tokens.Select(x => new Regex(x.Value)).ToArray(), false, "Specify regex filter(s).") { AllowMultipleArgumentsPerToken = true };
             GameName = new Option<string>("--game", $"Specify Game.") { IsRequired = true };
@@ -246,7 +246,7 @@ namespace AssetStudioCLI
         protected override Options GetBoundValue(BindingContext bindingContext) =>
         new Options
         {
-            Verbose = bindingContext.ParseResult.GetValueForOption(Verbose),
+            Silent = bindingContext.ParseResult.GetValueForOption(Silent),
             Types = bindingContext.ParseResult.GetValueForOption(Types),
             Filters = bindingContext.ParseResult.GetValueForOption(Filters),
             GameName = bindingContext.ParseResult.GetValueForOption(GameName),

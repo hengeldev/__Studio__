@@ -48,7 +48,7 @@ Arguments:
   <output_path>  Output folder.
 
 Options:
-  --verbose                                               Show log messages.
+  --silent                                                Hide log messages.
   --type <Texture2D|Sprite|etc..>                         Specify unity class type(s)
   --filter <filter>                                       Specify regex filter(s).
   --game <BH3|GI|SR|TOT> (REQUIRED)                       Specify Game.

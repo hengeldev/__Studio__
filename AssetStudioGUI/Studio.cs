@@ -884,7 +884,8 @@ namespace AssetStudioGUI
                         StatusStripUpdate($"Exporting {gameObject.m_Name}");
                         try
                         {
-                            ExportGameObject(gameObject, exportPath, animationList);
+                            var subExportPath = Path.Combine(exportPath, gameObject.m_Name) + Path.DirectorySeparatorChar;
+                            ExportGameObject(gameObject, subExportPath, animationList);
                             StatusStripUpdate($"Finished exporting {gameObject.m_Name}");
                         }
                         catch (Exception ex)
