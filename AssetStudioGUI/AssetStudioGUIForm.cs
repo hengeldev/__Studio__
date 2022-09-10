@@ -796,7 +796,7 @@ namespace AssetStudioGUI
                         StatusStripUpdate("Can be exported to FBX file.");
                         break;
                     case AnimationClip _:
-                        StatusStripUpdate("Can be exported with Animator or Objects");
+                        StatusStripUpdate("Can be exported with Animator or Objects or .anim file.");
                         break;
                     case AssetBundle m_AssetBundle:
                         PreviewAssetBundle(m_AssetBundle);

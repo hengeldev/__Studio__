@@ -217,5 +217,24 @@ namespace AssetStudio
             isNewHeader = (reader.Position - pos) == 0x1A;
             reader.Position = pos;
         }
+
+        public string FindMaterialPropertyNameByCRC28(uint crc)
+        {
+            foreach (PPtr<Material> materialPtr in m_Materials)
+            {
+                if (!materialPtr.TryGet(out var material))
+                {
+                    continue;
+                }
+                string property = material.FindPropertyNameByCRC28(crc);
+                if (property == null)
+                {
+                    continue;
+                }
+
+                return property;
+            }
+            return null;
+        }
     }
 }

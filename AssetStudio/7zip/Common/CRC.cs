@@ -1,5 +1,7 @@
 // Common/CRC.cs
 
+using System.Text;
+
 namespace SevenZip
 {
 	public class CRC
@@ -51,5 +53,27 @@ namespace SevenZip
 		{
 			return (CalculateDigest(data, offset, size) == digest);
 		}
-	}
+
+        public static uint CalculateDigestAscii(string data)
+        {
+            var bytes = Encoding.ASCII.GetBytes(data);
+            return CalculateDigest(bytes, 0, (uint)bytes.Length);
+        }
+
+        public static uint CalculateDigestUTF8(string data)
+        {
+            var bytes = Encoding.UTF8.GetBytes(data);
+            return CalculateDigest(bytes, 0, (uint)bytes.Length);
+        }
+
+        public static bool VerifyDigestUTF8(string data, uint digest)
+        {
+            return CalculateDigestUTF8(data) == digest;
+        }
+
+        public static bool Verify28DigestUTF8(string data, uint digest)
+        {
+            return (CalculateDigestUTF8(data) & 0xFFFFFFF) == digest;
+        }
+    }
 }

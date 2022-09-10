@@ -107,5 +107,10 @@ namespace AssetStudio
             }
             return base.ReadDouble();
         }
+
+        public Float ReadFloat()
+        {
+            return new Float(ReadSingle());
+        }
     }
 }

@@ -67,5 +67,31 @@ namespace AssetStudio
                 reader.AlignStream();
             }
         }
+
+        public Dictionary<uint, string> BuildTOS()
+        {
+            if (version[0] > 4 || (version[0] == 4 && version[1] >= 3))
+            {
+                if (m_HasTransformHierarchy)
+                {
+                    if (m_GameObject.TryGet(out var go))
+                    {
+                        return go.BuildTOS();
+                    }
+                }
+                else
+                {
+                    return new Dictionary<uint, string>() { { 0, string.Empty } };
+                }
+            }
+            else
+            {
+                if (m_GameObject.TryGet(out var go))
+                {
+                    return go.BuildTOS();
+                }
+            }
+            return null;
+        }
     }
 }

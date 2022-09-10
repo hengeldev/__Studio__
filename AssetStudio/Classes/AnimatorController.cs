@@ -601,5 +601,17 @@ namespace AssetStudio
                 m_AnimationClips[i] = new PPtr<AnimationClip>(reader);
             }
         }
+
+        public override bool IsContainsAnimationClip(AnimationClip clip)
+        {
+            foreach (PPtr<AnimationClip> ptr in m_AnimationClips)
+            {
+                if (ptr.TryGet(out var animationClip) && animationClip.Equals(clip))
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
     }
 }

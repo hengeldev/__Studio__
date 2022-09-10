@@ -4,10 +4,10 @@ using AssetStudio.PInvoke;
 
 namespace ACL
 {
-    public static class Acl
+    public static class ACL
     {
         private const string DLL_NAME = "acl";
-        static Acl()
+        static ACL()
         {
             DllLoader.PreloadDll(DLL_NAME);
         }

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using SevenZip;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -511,10 +512,7 @@ namespace AssetStudio
                         var shapeChannel = mesh.m_Shapes.channels[i];
 
                         var blendShapeName = "blendShape." + shapeChannel.name;
-                        var crc = new SevenZip.CRC();
-                        var bytes = Encoding.UTF8.GetBytes(blendShapeName);
-                        crc.Update(bytes, 0, (uint)bytes.Length);
-                        morphChannelNames[crc.GetDigest()] = blendShapeName;
+                        morphChannelNames[CRC.CalculateDigestUTF8(blendShapeName)] = blendShapeName;
 
                         channel.Name = shapeChannel.name.Split('.').Last();
                         channel.KeyframeList = new List<ImportedMorphKeyframe>(shapeChannel.frameCount);
@@ -1037,18 +1035,12 @@ namespace AssetStudio
         private void CreateBonePathHash(Transform m_Transform)
         {
             var name = GetTransformPathByFather(m_Transform);
-            var crc = new SevenZip.CRC();
-            var bytes = Encoding.UTF8.GetBytes(name);
-            crc.Update(bytes, 0, (uint)bytes.Length);
-            bonePathHash[crc.GetDigest()] = name;
+            bonePathHash[CRC.CalculateDigestUTF8(name)] = name;
             int index;
             while ((index = name.IndexOf("/", StringComparison.Ordinal)) >= 0)
             {
                 name = name.Substring(index + 1);
-                crc = new SevenZip.CRC();
-                bytes = Encoding.UTF8.GetBytes(name);
-                crc.Update(bytes, 0, (uint)bytes.Length);
-                bonePathHash[crc.GetDigest()] = name;
+                bonePathHash[CRC.CalculateDigestUTF8(name)] = name;
             }
             foreach (var pptr in m_Transform.m_Children)
             {

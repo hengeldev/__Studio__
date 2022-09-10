@@ -307,6 +307,16 @@ namespace AssetStudioCLI
             return false;
         }
 
+        public static bool ExportAnimationClip(AssetItem item, string exportPath)
+        {
+            if (!TryExportFile(exportPath, item, ".anim", out var exportFullPath))
+                return false;
+            var m_AnimationClip = (AnimationClip)item.Asset;
+            var str = m_AnimationClip.Convert(Studio.Game);
+            File.WriteAllText(exportFullPath, str);
+            return true;
+        }
+
         public static bool ExportDumpFile(AssetItem item, string exportPath)
         {
             if (!TryExportFile(exportPath, item, ".txt", out var exportFullPath))
@@ -349,7 +359,7 @@ namespace AssetStudioCLI
                 case ClassIDType.Animator:
                     return false;
                 case ClassIDType.AnimationClip:
-                    return false;
+                    return ExportAnimationClip(item, exportPath);
                 case ClassIDType.AssetBundle:
                     return ExportAssetBundle(item, exportPath);
                 case ClassIDType.IndexObject:

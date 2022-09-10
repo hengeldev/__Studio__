@@ -1,8 +1,11 @@
-﻿using System;
+﻿using SevenZip;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
+using System.Xml.Linq;
 
 namespace AssetStudio
 {
@@ -296,6 +299,7 @@ namespace AssetStudio
 
     public class MeshBlendShape
     {
+        public string name;
         public uint firstVertex;
         public uint vertexCount;
         public bool hasNormals;
@@ -307,7 +311,7 @@ namespace AssetStudio
 
             if (version[0] == 4 && version[1] < 3) //4.3 down
             {
-                var name = reader.ReadAlignedString();
+                name = reader.ReadAlignedString();
             }
             firstVertex = reader.ReadUInt32();
             vertexCount = reader.ReadUInt32();
@@ -322,6 +326,11 @@ namespace AssetStudio
             {
                 reader.AlignStream();
             }
+        }
+
+        public bool IsCRCMatch(uint digest)
+        {
+            return CRC.VerifyDigestUTF8(name, digest);
         }
     }
 
@@ -393,6 +402,17 @@ namespace AssetStudio
                     m_ShapeVertices[i] = new BlendShapeVertex(reader);
                 }
             }
+        }
+        public string FindShapeNameByCRC(uint crc)
+        {
+            foreach (var blendChannel in channels)
+            {
+                if (blendChannel.nameHash == crc)
+                {
+                    return blendChannel.name;
+                }
+            }
+            return null;
         }
     }
 
@@ -1200,6 +1220,25 @@ namespace AssetStudio
                     return m_UV7;
                 default:
                     throw new ArgumentOutOfRangeException();
+            }
+        }
+
+        public string FindBlendShapeNameByCRC(uint crc)
+        {
+            if (version[0] > 4 || (version[0] == 4 && version[1] >= 3))
+            {
+                return m_Shapes.FindShapeNameByCRC(crc);
+            }
+            else
+            {
+                foreach (var blendShape in m_Shapes.shapes)
+                {
+                    if (blendShape.IsCRCMatch(crc))
+                    {
+                        return blendShape.name;
+                    }
+                }
+                return null;
             }
         }
     }

@@ -167,7 +167,7 @@ namespace AssetStudioCLI
         {
             Silent = new Option<bool>("--silent", "Hide log messages.");
             Types = new Option<ClassIDType[]>("--type", "Specify unity class type(s)") { AllowMultipleArgumentsPerToken = true, ArgumentHelpName = "Texture2D|Sprite|etc.." };
-            Filters = new Option<Regex[]>("--filter", result => result.Tokens.Select(x => new Regex(x.Value)).ToArray(), false, "Specify regex filter(s).") { AllowMultipleArgumentsPerToken = true };
+            Filters = new Option<Regex[]>("--filter", result => result.Tokens.Select(x => new Regex(x.Value, RegexOptions.IgnoreCase)).ToArray(), false, "Specify regex filter(s).") { AllowMultipleArgumentsPerToken = true };
             GameName = new Option<string>("--game", $"Specify Game.") { IsRequired = true };
             MapOp = new Option<MapOpType>("--map_op", "Specify which map to build.");
             MapType = new Option<ExportListType>("--map_type", "AssetMap output type.");
@@ -206,7 +206,7 @@ namespace AssetStudioCLI
 
                     try
                     {
-                        Regex.Match("", val);
+                        Regex.Match("", val, RegexOptions.IgnoreCase);
                     }
                     catch (ArgumentException e)
                     {

@@ -1,4 +1,6 @@
 ﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using SevenZip;
 using System.Collections.Generic;
 
 namespace AssetStudio
@@ -19,6 +21,10 @@ namespace AssetStudio
 
     public class UnityPropertySheet
     {
+        private const string HDRPostfixName = "_HDR";
+        private const string STPostfixName = "_ST";
+        private const string TexelSizePostfixName = "_TexelSize";
+
         public Dictionary<string, UnityTexEnv> m_TexEnvs;
         public Dictionary<string, int> m_Ints;
         public Dictionary<string, float> m_Floats;
@@ -58,6 +64,43 @@ namespace AssetStudio
             {
                 m_Colors.Add(reader.ReadAlignedString(), reader.ReadColor4());
             }
+        }
+
+        public string FindPropertyNameByCRC28(uint crc)
+        {
+            foreach (var property in m_TexEnvs.Keys)
+            {
+                string hdrName = property + HDRPostfixName;
+                if (CRC.Verify28DigestUTF8(hdrName, crc))
+                {
+                    return hdrName;
+                }
+                string stName = property + STPostfixName;
+                if (CRC.Verify28DigestUTF8(stName, crc))
+                {
+                    return stName;
+                }
+                string texelName = property + TexelSizePostfixName;
+                if (CRC.Verify28DigestUTF8(texelName, crc))
+                {
+                    return texelName;
+                }
+            }
+            foreach (var property in m_Floats.Keys)
+            {
+                if (CRC.Verify28DigestUTF8(property, crc))
+                {
+                    return property;
+                }
+            }
+            foreach (var property in m_Colors.Keys)
+            {
+                if (CRC.Verify28DigestUTF8(property, crc))
+                {
+                    return property;
+                }
+            }
+            return null;
         }
     }
 
@@ -118,6 +161,11 @@ namespace AssetStudio
             m_SavedProperties = new UnityPropertySheet(reader);
 
             //vector m_BuildTextureStacks 2020 and up
+        }
+
+        public string FindPropertyNameByCRC28(uint crc)
+        {
+            return m_SavedProperties.FindPropertyNameByCRC28(crc);
         }
     }
 }

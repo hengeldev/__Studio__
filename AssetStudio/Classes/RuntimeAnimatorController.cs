@@ -11,5 +11,7 @@ namespace AssetStudio
         {
 
         }
+
+        public abstract bool IsContainsAnimationClip(AnimationClip clip);
     }
 }
